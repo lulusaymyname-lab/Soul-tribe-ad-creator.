@@ -164,6 +164,7 @@
                 <button id="showAdGeneratorBtn" class="bg-indigo-600 text-white font-bold py-2 px-6 rounded-xl transition-colors">Ad Generator</button>
                 <button id="showCampaignMakerBtn" class="bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-xl transition-colors">Campaign Maker</button>
                 <button id="showDashboardBtn" class="bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-xl transition-colors">My Ads Dashboard</button>
+                <button id="showSettingsBtn" class="bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-xl transition-colors">Settings</button>
             </div>
 
             <!-- Ad Generator Section -->
@@ -250,6 +251,23 @@
                         </div>
                     </div>
                 </div>
+            </div>
+            
+            <!-- Settings Section -->
+            <div id="settingsSection" class="hidden">
+                 <div class="p-6 bg-gray-800 rounded-2xl border border-gray-700 shadow-sm max-w-2xl mx-auto">
+                     <h2 class="text-2xl font-bold text-white mb-4">Settings</h2>
+                     <p class="text-sm text-gray-400 mb-4">
+                         To use the AI generation features on the live site, you need to provide your own Google AI API key. 
+                         You can get a free key from Google AI Studio.
+                     </p>
+                     <div class="flex flex-col space-y-4">
+                        <label for="apiKeyInput" class="font-semibold text-gray-300">Your Google AI API Key:</label>
+                        <input type="password" id="apiKeyInput" placeholder="Enter your API key" class="p-3 rounded-xl border border-gray-700 bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <button id="saveApiKeyBtn" class="bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition-colors">Save Key</button>
+                        <a href="https://makersuite.google.com/app/apikey" target="_blank" class="text-center text-indigo-400 hover:underline">Get your API Key here &rarr;</a>
+                    </div>
+                 </div>
             </div>
 
         </div>
@@ -426,6 +444,10 @@
         const clearDashboardBtn = document.getElementById('clearDashboardBtn');
         const addNewAdBtn = document.getElementById('addNewAdBtn');
         const addNewAdCard = document.getElementById('addNewAdCard');
+        const showSettingsBtn = document.getElementById('showSettingsBtn');
+        const settingsSection = document.getElementById('settingsSection');
+        const apiKeyInput = document.getElementById('apiKeyInput');
+        const saveApiKeyBtn = document.getElementById('saveApiKeyBtn');
 
         let productImage = null;
         let finalAdImageBase64 = null; // This will hold the raw base64 string
@@ -502,6 +524,10 @@
             });
         }
         
+        function getApiKey() {
+            return localStorage.getItem('geminiApiKey');
+        }
+
         function downloadBase64Image(base64Data, filename) {
             const link = document.createElement('a');
             link.download = filename;
@@ -512,9 +538,10 @@
         }
         
         async function analyzeProduct(base64ImageData, imageType) {
+            const apiKey = getApiKey();
+            if (!apiKey) throw new Error('API Key not set.');
             const analyzePrompt = "Identify the main product and its key features in the image. Focus on a factual description of what the item is, for use in an ad campaign.";
             const payload = { contents: [{ parts: [ { text: analyzePrompt }, { inlineData: { mimeType: imageType, data: base64ImageData } } ] }] };
-            const apiKey = "";
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
             try {
                 const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -525,10 +552,11 @@
         }
 
         async function generateAdCopy(prompt, productDescription) {
+            const apiKey = getApiKey();
+            if (!apiKey) throw new Error('API Key not set.');
             if (!prompt || !productDescription) return null;
             let textPrompt = `Create a compelling, short ad for a ${productDescription.toLowerCase()} with a background of: "${prompt}". Provide a punchy headline and a brief body text. Emphasize botanical ingredients and scientific benefits. Format as: Headline: [Your Headline] Body: [Your Body Text]`;
             const payload = { contents: [{ role: "user", parts: [{ text: textPrompt }] }] };
-            const apiKey = "";
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
             try {
                 const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -539,9 +567,10 @@
         }
         
         async function compositeAdWithAI(prompt, adCopy, productImageBase64, imageType) {
+            const apiKey = getApiKey();
+            if (!apiKey) throw new Error('API Key not set.');
             const newPrompt = `Create a professional marketing ad. The background should be: "${prompt}". Place the provided product image prominently. Integrate the ad copy seamlessly into the design. Ad copy: "${adCopy}". Ensure the final image is visually appealing and high-resolution.`;
             const payload = { contents: [{ parts: [ { text: newPrompt }, { inlineData: { mimeType: imageType, data: productImageBase64 } } ] }], generationConfig: { responseModalities: ['TEXT', 'IMAGE'] } };
-            const apiKey = "";
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${apiKey}`;
             try {
                 const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -552,6 +581,8 @@
         }
 
         async function generateCampaign(productName, platforms, image = null) {
+            const apiKey = getApiKey();
+            if (!apiKey) throw new Error('API Key not set.');
             const basePrompt = `Create a social media campaign for the following platforms: ${platforms.join(', ')}. For each platform, provide a "headline", "ad_copy", "visual_concept", and "call_to_action". Focus on highlighting the scientific and botanical benefits of the product. Format as a single JSON array of objects. Each object in the array should represent a platform and contain the keys "platform_name", "headline", "ad_copy", "visual_concept", and "call_to_action".`;
             
             const payload = {
@@ -587,7 +618,6 @@
                 payload.contents[0].parts.push({ text: campaignPrompt });
             }
 
-            const apiKey = "";
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
             try {
                 const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -600,8 +630,9 @@
         }
 
         async function generateCampaignVisual(prompt) {
+            const apiKey = getApiKey();
+            if (!apiKey) throw new Error('API Key not set.');
             const payload = { instances: [{ prompt: prompt }], parameters: { "sampleCount": 1 } };
-            const apiKey = "";
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
             try {
                 const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -612,6 +643,11 @@
         }
 
         async function handleGenerateAd() {
+            if (!getApiKey()) {
+                showMessageBox('Please add your Google AI API key in Settings first.', true);
+                showSettingsBtn.click();
+                return;
+            }
             const prompt = backgroundPromptInput.value.trim();
             if (!prompt || !productImage) return showMessageBox('Please enter a prompt and upload an image.', true);
             generateAdBtn.disabled = true;
@@ -745,6 +781,11 @@
         }
 
         async function handleGenerateCampaign() {
+            if (!getApiKey()) {
+                showMessageBox('Please add your Google AI API key in Settings first.', true);
+                showSettingsBtn.click();
+                return;
+            }
             const productName = productNameInput.value.trim();
             const platforms = $('#platforms').val();
             if ((!productName && !campaignImage) || platforms.length === 0) return showMessageBox('Please provide a product name or image and select platforms.', true);
@@ -753,66 +794,70 @@
             generateCampaignBtn.textContent = 'Generating...';
             campaignOutput.innerHTML = `<div class="col-span-2 text-center p-4 text-gray-400">Generating campaign...</div>`;
             
-            const campaignData = await generateCampaign(productName, platforms, campaignImage);
+            try {
+                const campaignData = await generateCampaign(productName, platforms, campaignImage);
+                if (campaignData) {
+                    campaignOutput.innerHTML = '';
+                    for (const platformData of campaignData) {
+                        const platform = platformData.platform_name.toLowerCase();
+                        const card = document.createElement('div');
+                        card.className = 'p-6 bg-gray-800 rounded-2xl border border-gray-700 shadow-md';
+                        card.innerHTML = `
+                            <h3 class="text-xl font-bold">${platformData.platform_name.charAt(0).toUpperCase() + platformData.platform_name.slice(1)}</h3>
+                            <p class="text-sm text-gray-400"><strong>Headline:</strong> ${platformData.headline || 'N/A'}</p>
+                            <p class="text-sm text-gray-400"><strong>Ad Copy:</strong> ${platformData.ad_copy || 'N/A'}</p>
+                            <p class="text-sm text-gray-400"><strong>Visual Concept:</strong> ${platformData.visual_concept || 'N/A'}</p>
+                            <p class="text-sm text-gray-400"><strong>Call to Action:</strong> ${platformData.call_to_action || 'N/A'}</p>
+                            <div class="mt-4 aspect-video bg-gray-700 rounded-lg flex items-center justify-center">
+                                <img id="img-${platform}" class="hidden w-full h-full object-cover rounded-lg" />
+                                <div id="loader-${platform}" class="text-gray-400">Loading visual...</div>
+                            </div>
+                            <div id="controls-${platform}" class="mt-4 flex space-x-2 hidden">
+                                <button class="download-visual-btn flex-1 bg-green-600 text-white text-sm py-2 px-3 rounded-lg hover:bg-green-700 transition-colors">Download</button>
+                                <button class="use-in-ad-gen-btn flex-1 bg-blue-600 text-white text-sm py-2 px-3 rounded-lg hover:bg-blue-700 transition-colors" data-platform="${platform}" data-concept="${platformData.visual_concept || ''}">Use in Ad Generator</button>
+                            </div>`;
+                        campaignOutput.appendChild(card);
+                        
+                        const imgElement = document.getElementById(`img-${platform}`);
+                        const loaderElement = document.getElementById(`loader-${platform}`);
+                        const controlsElement = document.getElementById(`controls-${platform}`);
+                        const downloadBtnElement = card.querySelector('.download-visual-btn');
+                        if(isTrial) downloadBtnElement.classList.add('cursor-not-allowed', 'opacity-50');
+                        else downloadBtnElement.classList.remove('cursor-not-allowed', 'opacity-50');
+                        downloadBtnElement.addEventListener('click', handleDownloadVisual);
 
-            if (campaignData) {
-                campaignOutput.innerHTML = '';
-                for (const platformData of campaignData) {
-                    const platform = platformData.platform_name.toLowerCase();
-                    const card = document.createElement('div');
-                    card.className = 'p-6 bg-gray-800 rounded-2xl border border-gray-700 shadow-md';
-                    card.innerHTML = `
-                        <h3 class="text-xl font-bold">${platformData.platform_name.charAt(0).toUpperCase() + platformData.platform_name.slice(1)}</h3>
-                        <p class="text-sm text-gray-400"><strong>Headline:</strong> ${platformData.headline || 'N/A'}</p>
-                        <p class="text-sm text-gray-400"><strong>Ad Copy:</strong> ${platformData.ad_copy || 'N/A'}</p>
-                        <p class="text-sm text-gray-400"><strong>Visual Concept:</strong> ${platformData.visual_concept || 'N/A'}</p>
-                        <p class="text-sm text-gray-400"><strong>Call to Action:</strong> ${platformData.call_to_action || 'N/A'}</p>
-                        <div class="mt-4 aspect-video bg-gray-700 rounded-lg flex items-center justify-center">
-                            <img id="img-${platform}" class="hidden w-full h-full object-cover rounded-lg" />
-                            <div id="loader-${platform}" class="text-gray-400">Loading visual...</div>
-                        </div>
-                        <div id="controls-${platform}" class="mt-4 flex space-x-2 hidden">
-                            <button class="download-visual-btn flex-1 bg-green-600 text-white text-sm py-2 px-3 rounded-lg hover:bg-green-700 transition-colors">Download</button>
-                            <button class="use-in-ad-gen-btn flex-1 bg-blue-600 text-white text-sm py-2 px-3 rounded-lg hover:bg-blue-700 transition-colors" data-platform="${platform}" data-concept="${platformData.visual_concept || ''}">Use in Ad Generator</button>
-                        </div>`;
-                    campaignOutput.appendChild(card);
-                    
-                    const imgElement = document.getElementById(`img-${platform}`);
-                    const loaderElement = document.getElementById(`loader-${platform}`);
-                    const controlsElement = document.getElementById(`controls-${platform}`);
-                    const downloadBtnElement = card.querySelector('.download-visual-btn');
-                    if(isTrial) downloadBtnElement.classList.add('cursor-not-allowed', 'opacity-50');
-                    else downloadBtnElement.classList.remove('cursor-not-allowed', 'opacity-50');
-                    downloadBtnElement.addEventListener('click', handleDownloadVisual);
-
-                    if (campaignImage && campaignImage.data) {
-                        imgElement.src = `data:${campaignImage.type};base64,${campaignImage.data}`;
-                        imgElement.classList.remove('hidden');
-                        loaderElement.classList.add('hidden');
-                        controlsElement.classList.remove('hidden');
-                    } else if (platformData.visual_concept) {
-                        try {
-                            const visualBase64 = await generateCampaignVisual(`Marketing photo: ${platformData.visual_concept} for ${productName}.`);
-                            if (visualBase64) {
-                                imgElement.src = `data:image/png;base64,${visualBase64}`;
-                                imgElement.classList.remove('hidden');
-                                loaderElement.classList.add('hidden');
-                                controlsElement.classList.remove('hidden');
-                            } else throw new Error('API returned no data.');
-                        } catch(error) {
-                             console.error(`Visual generation failed for ${platform}:`, error);
-                             loaderElement.textContent = 'Visual generation failed.';
+                        if (campaignImage && campaignImage.data) {
+                            imgElement.src = `data:${campaignImage.type};base64,${campaignImage.data}`;
+                            imgElement.classList.remove('hidden');
+                            loaderElement.classList.add('hidden');
+                            controlsElement.classList.remove('hidden');
+                        } else if (platformData.visual_concept) {
+                            try {
+                                const visualBase64 = await generateCampaignVisual(`Marketing photo: ${platformData.visual_concept} for ${productName}.`);
+                                if (visualBase64) {
+                                    imgElement.src = `data:image/png;base64,${visualBase64}`;
+                                    imgElement.classList.remove('hidden');
+                                    loaderElement.classList.add('hidden');
+                                    controlsElement.classList.remove('hidden');
+                                } else throw new Error('API returned no data.');
+                            } catch(error) {
+                                 console.error(`Visual generation failed for ${platform}:`, error);
+                                 loaderElement.textContent = 'Visual generation failed.';
+                            }
+                        } else {
+                            loaderElement.textContent = 'No visual concept.';
                         }
-                    } else {
-                        loaderElement.textContent = 'No visual concept.';
                     }
+                    document.querySelectorAll('.use-in-ad-gen-btn').forEach(button => button.addEventListener('click', handleUseInAdGenerator));
+                } else {
+                    throw new Error('Failed to generate campaign data.');
                 }
-                document.querySelectorAll('.use-in-ad-gen-btn').forEach(button => button.addEventListener('click', handleUseInAdGenerator));
-            } else {
-                campaignOutput.innerHTML = '<div class="col-span-2 text-center text-red-500">Failed to generate campaign.</div>';
+            } catch (error) {
+                 campaignOutput.innerHTML = `<div class="col-span-2 text-center text-red-500">${error.message}</div>`;
+            } finally {
+                generateCampaignBtn.disabled = false;
+                generateCampaignBtn.textContent = 'Generate Campaign';
             }
-            generateCampaignBtn.disabled = false;
-            generateCampaignBtn.textContent = 'Generate Campaign';
         }
 
         function handleUseInAdGenerator(event) {
@@ -841,9 +886,35 @@
                 showMessageBox('Could not find the image to use in the Ad Generator.', true);
             }
         }
+        
+        function setActiveButton(activeBtn) {
+            [showAdGeneratorBtn, showCampaignMakerBtn, showDashboardBtn, showSettingsBtn].forEach(btn => {
+                if (btn === activeBtn) {
+                    btn.classList.add('bg-indigo-600', 'text-white');
+                    btn.classList.remove('bg-gray-200', 'text-gray-800');
+                } else {
+                    btn.classList.remove('bg-indigo-600', 'text-white');
+                    btn.classList.add('bg-gray-200', 'text-gray-800');
+                }
+            });
+        }
+        
+        function showSection(sectionToShow) {
+             [adGenerator, campaignMaker, myAdsDashboardSection, settingsSection].forEach(section => {
+                if (section === sectionToShow) {
+                    section.classList.remove('hidden');
+                } else {
+                    section.classList.add('hidden');
+                }
+            });
+        }
+
 
         window.addEventListener('load', () => {
             setupFileUpload();
+            apiKeyInput.value = getApiKey() || '';
+
+            // Event Listeners
             generateAdBtn.addEventListener('click', handleGenerateAd);
             resetBtn.addEventListener('click', handleReset);
             campaignImageUpload.addEventListener('change', handleCampaignImageUpload);
@@ -866,46 +937,41 @@
                 }
                 handleLaunchToMeta(metaId);
             });
+            
+            saveApiKeyBtn.addEventListener('click', () => {
+                const key = apiKeyInput.value.trim();
+                if (key) {
+                    localStorage.setItem('geminiApiKey', key);
+                    showMessageBox('API Key saved successfully!');
+                    showAdGeneratorBtn.click();
+                } else {
+                    showMessageBox('Please enter a valid API key.', true);
+                }
+            });
 
             if (isTrial) {
                 downloadBtn.classList.add('cursor-not-allowed', 'opacity-50');
             }
 
             showAdGeneratorBtn.addEventListener('click', () => {
-                adGenerator.classList.remove('hidden');
-                campaignMaker.classList.add('hidden');
-                myAdsDashboardSection.classList.add('hidden');
-                showAdGeneratorBtn.classList.add('bg-indigo-600', 'text-white');
-                showAdGeneratorBtn.classList.remove('bg-gray-200', 'text-gray-800');
-                showCampaignMakerBtn.classList.add('bg-gray-200', 'text-gray-800');
-                showCampaignMakerBtn.classList.remove('bg-indigo-600', 'text-white');
-                showDashboardBtn.classList.add('bg-gray-200', 'text-gray-800');
-                showDashboardBtn.classList.remove('bg-indigo-600', 'text-white');
+                showSection(adGenerator);
+                setActiveButton(showAdGeneratorBtn);
             });
 
             showCampaignMakerBtn.addEventListener('click', () => {
-                adGenerator.classList.add('hidden');
-                campaignMaker.classList.remove('hidden');
-                myAdsDashboardSection.classList.add('hidden');
-                showCampaignMakerBtn.classList.add('bg-indigo-600', 'text-white');
-                showCampaignMakerBtn.classList.remove('bg-gray-200', 'text-gray-800');
-                showAdGeneratorBtn.classList.add('bg-gray-200', 'text-gray-800');
-                showAdGeneratorBtn.classList.remove('bg-indigo-600', 'text-white');
-                showDashboardBtn.classList.add('bg-gray-200', 'text-gray-800');
-                showDashboardBtn.classList.remove('bg-indigo-600', 'text-white');
+                showSection(campaignMaker);
+                setActiveButton(showCampaignMakerBtn);
             });
 
             showDashboardBtn.addEventListener('click', () => {
-                adGenerator.classList.add('hidden');
-                campaignMaker.classList.add('hidden');
-                myAdsDashboardSection.classList.remove('hidden');
-                showDashboardBtn.classList.add('bg-indigo-600', 'text-white');
-                showDashboardBtn.classList.remove('bg-gray-200', 'text-gray-800');
-                showAdGeneratorBtn.classList.add('bg-gray-200', 'text-gray-800');
-                showAdGeneratorBtn.classList.remove('bg-indigo-600', 'text-white');
-                showCampaignMakerBtn.classList.add('bg-gray-200', 'text-gray-800');
-                showCampaignMakerBtn.classList.remove('bg-indigo-600', 'text-white');
+                showSection(myAdsDashboardSection);
+                setActiveButton(showDashboardBtn);
                 loadAdsToDashboard();
+            });
+            
+            showSettingsBtn.addEventListener('click', () => {
+                showSection(settingsSection);
+                setActiveButton(showSettingsBtn);
             });
 
             addNewAdCard.addEventListener('click', () => showAdGeneratorBtn.click());
@@ -984,9 +1050,4 @@
     </script>
 </body>
 </html>
-
-
-
-
-
 
