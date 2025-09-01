@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ad & Campaign Creator</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- PayPal SDK (Fixed with data-namespace) -->
-    <script src="https://www.paypal.com/sdk/js?client-id=AQRSVj2hhAqWy7TCjAWRB4mxj5Y3B87JdMGtBUIGCEKMFMWLvep2pRGDGyjTebgI2N760RB1jUrsmZGW&currency=USD" data-namespace="paypal_sdk"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -148,11 +146,11 @@
             <h2 class="text-3xl font-bold text-center mb-10">See the Magic: Before & After</h2>
             <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-center text-center md:text-left">
                 <div>
-                    <img src="https://i.imgur.com/sbKrFep.png" alt="Before: Raw product shot" class="rounded-xl shadow-lg border border-gray-700 mx-auto">
+                    <img src="https://i.imgur.com/NXeFCWd.png" alt="Before: Raw product shot" class="rounded-xl shadow-lg border border-gray-700 mx-auto">
                     <p class="mt-4 text-gray-400">Before: A standard product image.</p>
                 </div>
                 <div class="relative">
-                    <img src="https://i.imgur.com/NXeFCWd.png" alt="After: AI-generated ad" class="rounded-xl shadow-lg border border-pink-500 mx-auto">
+                    <img src="https://i.imgur.com/sbKrFep.png" alt="After: AI-generated ad" class="rounded-xl shadow-lg border border-pink-500 mx-auto">
                     <p class="mt-4 text-gray-400">After: A professional, AI-generated ad.</p>
                     <div class="absolute inset-0 bg-white/10 rounded-xl"></div>
                 </div>
@@ -181,10 +179,12 @@
                           </p>
                         </div>
                         <textarea id="backgroundPrompt" class="w-full h-24 p-3 text-base text-gray-900 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500" placeholder="A sleek marble podium..."></textarea>
-                        <label id="uploadLabel" class="cursor-pointer mt-4 w-full text-gray-200 font-bold py-3 px-6 rounded-xl shadow-md text-center bg-gray-700 hover:bg-gray-600 block transition-colors">
-                            Upload Product Image
-                            <input type="file" id="productImageUpload" accept="image/*" class="hidden" />
-                        </label>
+                        <div id="uploadContainer">
+                            <label id="uploadLabel" class="cursor-pointer mt-4 w-full text-gray-200 font-bold py-3 px-6 rounded-xl shadow-md text-center bg-gray-700 hover:bg-gray-600 block transition-colors">
+                                Upload Product Image
+                                <input type="file" id="productImageUpload" accept="image/*" class="hidden" />
+                            </label>
+                        </div>
                         <button id="generateAdBtn" class="mt-4 w-full bg-indigo-600 text-white font-bold py-4 px-8 rounded-xl hover:bg-indigo-700 transition-colors">Generate Ad</button>
                     </div>
                     <div id="adCopyContainer" class="p-6 bg-gray-800 rounded-2xl border border-gray-700 hidden">
@@ -233,58 +233,15 @@
             <div id="myAdsDashboardSection" class="hidden">
                 <div class="flex flex-wrap justify-between items-center mb-10 gap-4">
                     <h2 class="text-3xl font-bold">My Ads Dashboard</h2>
-                    <button id="addNewAdBtn" class="bg-indigo-600 text-white font-bold py-2 px-6 rounded-xl transition-colors hover:bg-indigo-700">Create New Ad</button>
+                     <div class="flex space-x-4">
+                         <button id="clearDashboardBtn" class="bg-red-600 text-white font-bold py-2 px-6 rounded-xl transition-colors hover:bg-red-700">Clear All Ads</button>
+                        <button id="addNewAdBtn" class="bg-indigo-600 text-white font-bold py-2 px-6 rounded-xl transition-colors hover:bg-indigo-700">Create New Ad</button>
+                    </div>
                 </div>
                 <div class="max-w-7xl mx-auto">
                     <!-- Grid for launched ads -->
                     <div id="adsDashboardGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <!-- Initial placeholder/example ad -->
-                        <div class="bg-gray-800 rounded-2xl border border-gray-700 overflow-hidden">
-                            <img src="https://i.imgur.com/RzmcLQd.png" alt="Ad Preview" class="w-full h-64 object-cover">
-                            <div class="p-6">
-                                <h3 class="font-semibold text-white mb-2">"Bomber Jacket" Ad</h3>
-                                <p class="text-sm text-gray-400 mb-4">Status: <span class="font-semibold text-green-400">Active</span></p>
-                                <div class="grid grid-cols-3 gap-4 text-center">
-                                    <div>
-                                        <p class="text-xs text-gray-400">Reach</p>
-                                        <p class="text-lg font-bold text-white">12.5K</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs text-gray-400">Clicks</p>
-                                        <p class="text-lg font-bold text-white">1.2K</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs text-gray-400">CTR</p>
-                                        <p class="text-lg font-bold text-white">9.6%</p>
-                                    </div>
-                                </div>
-                                <button class="mt-4 w-full bg-gray-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors">View Performance</button>
-                            </div>
-                        </div>
-                         <!-- Second placeholder/example ad from the other image -->
-                        <div class="bg-gray-800 rounded-2xl border border-gray-700 overflow-hidden">
-                            <img src="https://i.imgur.com/5dUY1BS.png" alt="Ad Preview" class="w-full h-64 object-cover">
-                             <div class="p-6">
-                                <h3 class="font-semibold text-white mb-2">"Skincare Essentials" Promo</h3>
-                                <p class="text-sm text-gray-400 mb-4">Status: <span class="font-semibold text-red-400">Ended</span></p>
-                                 <div class="grid grid-cols-3 gap-4 text-center">
-                                    <div>
-                                        <p class="text-xs text-gray-400">Reach</p>
-                                        <p class="text-lg font-bold text-white">98.1K</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs text-gray-400">Clicks</p>
-                                        <p class="text-lg font-bold text-white">9.2K</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs text-gray-400">CTR</p>
-                                        <p class="text-lg font-bold text-white">9.4%</p>
-                                    </div>
-                                </div>
-                                <button class="mt-4 w-full bg-gray-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors">View Performance</button>
-                            </div>
-                        </div>
-                        <!-- Add new ad card -->
+                        <!-- Ads will be dynamically inserted here -->
                         <div id="addNewAdCard" class="bg-gray-800 rounded-2xl border-2 border-dashed border-gray-600 flex items-center justify-center cursor-pointer hover:bg-gray-700 transition-colors min-h-[400px]">
                             <div class="text-center text-gray-400">
                                 <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
@@ -310,25 +267,27 @@
         <section class="bg-[#1b1b2f] py-16 px-6">
             <h2 class="text-3xl font-bold text-center mb-10">Simple Pricing</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-                <div class="bg-[#0b0b15] p-8 rounded-2xl pricing-card">
+                <div class="bg-[#0b0b15] p-8 rounded-2xl">
                     <h3 class="text-2xl font-bold mb-2">Starter</h3>
                     <p class="text-4xl font-bold my-4 text-yellow-400">$19<span class="text-base font-normal text-gray-300"> / month</span></p>
                     <p class="text-gray-400">50 Ad downloads / mo<br>1 Brand Kit<br>Basic analytics</p>
-                    <div id="paypal-button-starter" class="paypal-button-container mt-6" data-plan-name="Starter" data-plan-price="19"></div>
+                    <button class="mt-6 bg-pink-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-pink-700 pay-btn" data-plan="Starter" data-price="19">Pay with Card / PayPal</button>
                 </div>
-                <div class="bg-[#0b0b15] p-8 rounded-2xl border-2 border-pink-500 pricing-card">
+                <div class="bg-[#0b0b15] p-8 rounded-2xl border-2 border-pink-500">
                     <h3 class="text-2xl font-bold mb-2">Pro</h3>
                     <p class="text-4xl font-bold my-4 text-yellow-400">$49<span class="text-base font-normal text-gray-300"> / month</span></p>
                     <p class="text-gray-400">200 Ad downloads / mo<br>3 Brand Kits<br>A/B variants</p>
-                    <div id="paypal-button-pro" class="paypal-button-container mt-6" data-plan-name="Pro" data-plan-price="49"></div>
+                    <button class="mt-6 bg-pink-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-pink-700 pay-btn" data-plan="Pro" data-price="49">Pay with Card / PayPal</button>
                 </div>
-                <div class="bg-[#0b0b15] p-8 rounded-2xl pricing-card">
+                <div class="bg-[#0b0b15] p-8 rounded-2xl">
                     <h3 class="text-2xl font-bold mb-2">Business</h3>
                     <p class="text-4xl font-bold my-4 text-yellow-400">$99<span class="text-base font-normal text-gray-300"> / month</span></p>
                     <p class="text-gray-400">Unlimited downloads<br>5 seats included<br>API access</p>
-                     <div id="paypal-button-business" class="paypal-button-container mt-6" data-plan-name="Business" data-plan-price="99"></div>
+                    <button class="mt-6 bg-pink-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-pink-700 pay-btn" data-plan="Business" data-price="99">Pay with Card / PayPal</button>
                 </div>
             </div>
+             <div id="paypal-button-container" class="max-w-sm mx-auto mt-8"></div>
+             <p id="payment-success-message" class="text-center text-green-400 font-semibold mt-4 hidden"></p>
         </section>
     </div>
 
@@ -363,6 +322,8 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://www.paypal.com/sdk/js?client-id=AQ8g25vryYQYUSh_-_s-3JEDIl01nQ1-p-R3g_48hpv-pCf3o2Oq2T_Vb-g-3FkGdwQKxgtqO3G0pe4P&currency=USD" data-sdk-integration-source="developer-studio"></script>
+
     <script>
         // --- App State ---
         let isTrial = true;
@@ -394,9 +355,9 @@
 
         // --- Scroller Logic ---
         const carouselData = [
-            { src: "https://i.imgur.com/NXeFCWd.png", title: "Skincare Ad" },
-            { src: "https://i.imgur.com/PvoIuCN.png", title: "Cosmetics Ad" },
-            { src: "https://i.imgur.com/RCRgEIj.png", title: "Product Ad" },
+            { src: "https://i.imgur.com/sbKrFep.png", title: "Perfume Ad" },
+            { src: "https://i.imgur.com/RCRgEIj.png", title: "Watch Ad" },
+            { src: "https://i.imgur.com/PvoIuCN.png", title: "Shoe Ad" },
             { src: "https://i.imgur.com/5dUY1BS.png", title: "Skincare" },
             { src: "https://i.imgur.com/zAQhPWu.png", title: "Spices" },
             { src: "https://i.imgur.com/wnNbifw.png", title: "Botanical Facial Crème" },
@@ -405,39 +366,15 @@
             { src: "https://i.imgur.com/wRHLkot.png", title: "Composite Ad" },
             { src: "https://i.imgur.com/90tB2Gc.png", title: "Radiant Serum" },
             { src: "https://i.imgur.com/CgRamm8.png", title: "Purifying Clay Mask" },
-            { src: "https://i.imgur.com/ozbQKtz.png", title: "Modern Chair" },
-            { src: "https://i.imgur.com/NCisB59.png", title: "Acoustic Guitar" },
-            { src: "https://i.imgur.com/Gr7uHLH.png", title: "Watch" },
-            { src: "https://i.imgur.com/X6v7j3R.png", title: "Headphones" },
-            { src: "https://i.imgur.com/ozNyrpZ.png", title: "Camera" },
-            { src: "https://i.imgur.com/F1gINsg.png", title: "Drone" },
-            { src: "https://i.imgur.com/yZgDYMe.png", title: "Floral Skincare" },
-            { src: "https://i.imgur.com/HBhYJio.png", title: "Modern Skincare" },
-            { src: "https://i.imgur.com/STmo7rw.png", title: "Luxury Perfume" },
-            { src: "https://i.imgur.com/WbD8Fm4.png", title: "Tech Gadgets" },
-            { src: "https://i.imgur.com/4mfZLFF.png", title: "Fitness Supplement" },
-            { src: "https://i.imgur.com/wyilFF1.png", title: "Outdoor Wear" },
-            { src: "https://i.imgur.com/ozTttVi.png", title: "Watch Ad" },
-            { src: "https://i.imgur.com/HIxo7BS.png", title: "Shoe Ad" },
-            { src: "https://i.imgur.com/MxWnqDu.png", title: "Skincare Set" },
-            { src: "https://i.imgur.com/vBK0u09.png", title: "Perfume Ad" },
-            { src: "https://i.imgur.com/gsaAUW7.png", title: "Foundation Ad" },
-            { src: "https://i.imgur.com/r0kRMIq.png", title: "Serum Ad" }
         ];
 
         function initializeScroller() {
             const scrollerInner = document.querySelector('.scroller__inner');
             if (scrollerInner) {
                 scrollerInner.innerHTML = ''; // Clear existing content
-                carouselData.forEach(item => {
-                    const img = document.createElement('img');
-                    img.src = item.src;
-                    img.alt = item.title;
-                    img.onerror = () => { img.src = `https://placehold.co/180x180/E5E7EB/6B7280?text=Image+Load+Error`; };
-                    scrollerInner.appendChild(img);
-                });
                 // Duplicate images for infinite scroll effect
-                carouselData.forEach(item => {
+                const combinedCarousel = [...carouselData, ...carouselData];
+                combinedCarousel.forEach(item => {
                     const img = document.createElement('img');
                     img.src = item.src;
                     img.alt = item.title;
@@ -457,8 +394,7 @@
         });
 
         // DOM element references
-        let productImageUpload;
-        let uploadLabel;
+        const uploadContainer = document.getElementById('uploadContainer');
         const backgroundPromptInput = document.getElementById('backgroundPrompt');
         const generateAdBtn = document.getElementById('generateAdBtn');
         const adImage = document.getElementById('adImage');
@@ -487,10 +423,61 @@
         const launchToMetaBtn = document.getElementById('launchToMetaBtn');
         const metaAdAccountIdInput = document.getElementById('metaAdAccountId');
         const connectAndLaunchBtn = document.getElementById('connectAndLaunchBtn');
+        const clearDashboardBtn = document.getElementById('clearDashboardBtn');
+        const addNewAdBtn = document.getElementById('addNewAdBtn');
+        const addNewAdCard = document.getElementById('addNewAdCard');
 
-        let productImageBase64 = null;
-        let finalAdImageBase64 = null;
-        let campaignImageBase64 = null;
+        let productImage = null;
+        let finalAdImageBase64 = null; // This will hold the raw base64 string
+        let campaignImage = null;
+
+        // --- Dashboard Storage Logic ---
+        function saveAdToDashboard(adData) {
+            let ads = JSON.parse(localStorage.getItem('savedAds')) || [];
+            ads.unshift(adData); // Add new ad to the beginning
+            localStorage.setItem('savedAds', JSON.stringify(ads));
+        }
+
+        function loadAdsToDashboard() {
+            const adsDashboardGrid = document.getElementById('adsDashboardGrid');
+            const addNewAdCard = document.getElementById('addNewAdCard'); // Keep reference to the "add new" card
+            adsDashboardGrid.innerHTML = ''; // Clear the grid completely
+            
+            let ads = JSON.parse(localStorage.getItem('savedAds')) || [];
+            
+            if (ads.length === 0) {
+                 const placeholderCard = document.createElement('div');
+                 placeholderCard.className = 'text-center text-gray-400 col-span-1 md:col-span-2 lg:col-span-3 py-10';
+                 placeholderCard.innerHTML = `<p>You haven't launched any ads yet.</p><p>Create an ad and click "Launch" to save it here!</p>`;
+                 adsDashboardGrid.appendChild(placeholderCard);
+            } else {
+                ads.forEach(ad => {
+                    const adCard = document.createElement('div');
+                    adCard.className = 'bg-gray-800 rounded-2xl border border-gray-700 overflow-hidden';
+                    adCard.innerHTML = `
+                        <img src="${ad.imageBase64}" alt="Ad Preview" class="w-full h-64 object-cover">
+                        <div class="p-6">
+                            <h3 class="font-semibold text-white mb-2">"${ad.headline}"</h3>
+                            <p class="text-sm text-gray-400 mb-4">Status: <span class="font-semibold text-yellow-400">In Review</span></p>
+                            <div class="grid grid-cols-3 gap-4 text-center">
+                                <div><p class="text-xs text-gray-400">Reach</p><p class="text-lg font-bold text-white">${ad.reach}</p></div>
+                                <div><p class="text-xs text-gray-400">Clicks</p><p class="text-lg font-bold text-white">${ad.clicks}</p></div>
+                                <div><p class="text-xs text-gray-400">CTR</p><p class="text-lg font-bold text-white">${ad.ctr}</p></div>
+                            </div>
+                            <button class="mt-4 w-full bg-gray-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors">View Performance</button>
+                        </div>`;
+                    adsDashboardGrid.appendChild(adCard);
+                });
+            }
+            adsDashboardGrid.appendChild(addNewAdCard); // Always re-append the "Add New" card at the end
+        }
+        
+        function clearDashboard() {
+            // Removed the confirm() dialog which does not work reliably in the iframe environment.
+            localStorage.removeItem('savedAds');
+            loadAdsToDashboard();
+            showMessageBox('Dashboard cleared successfully.');
+        }
 
         function showMessageBox(message, isError = false) {
             messageBox.textContent = message;
@@ -506,24 +493,27 @@
         function fileToBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
-                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onload = () => resolve({
+                    data: reader.result.split(',')[1],
+                    type: file.type
+                });
                 reader.onerror = error => reject(error);
                 reader.readAsDataURL(file);
             });
         }
-
+        
         function downloadBase64Image(base64Data, filename) {
             const link = document.createElement('a');
             link.download = filename;
-            link.href = base64Data;
+            link.href = base64Data; // Requires full data URL
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         }
         
-        async function analyzeProduct(base64ImageData) {
+        async function analyzeProduct(base64ImageData, imageType) {
             const analyzePrompt = "Identify the main product and its key features in the image. Focus on a factual description of what the item is, for use in an ad campaign.";
-            const payload = { contents: [{ parts: [ { text: analyzePrompt }, { inlineData: { mimeType: "image/jpeg", data: base64ImageData } } ] }] };
+            const payload = { contents: [{ parts: [ { text: analyzePrompt }, { inlineData: { mimeType: imageType, data: base64ImageData } } ] }] };
             const apiKey = "";
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
             try {
@@ -548,9 +538,9 @@
             } catch (error) { console.error('Ad copy generation failed:', error); return "Failed to generate copy."; }
         }
         
-        async function compositeAdWithAI(prompt, adCopy, productImageBase64) {
+        async function compositeAdWithAI(prompt, adCopy, productImageBase64, imageType) {
             const newPrompt = `Create a professional marketing ad. The background should be: "${prompt}". Place the provided product image prominently. Integrate the ad copy seamlessly into the design. Ad copy: "${adCopy}". Ensure the final image is visually appealing and high-resolution.`;
-            const payload = { contents: [{ parts: [ { text: newPrompt }, { inlineData: { mimeType: "image/jpeg", data: productImageBase64 } } ] }], generationConfig: { responseModalities: ['TEXT', 'IMAGE'] } };
+            const payload = { contents: [{ parts: [ { text: newPrompt }, { inlineData: { mimeType: imageType, data: productImageBase64 } } ] }], generationConfig: { responseModalities: ['TEXT', 'IMAGE'] } };
             const apiKey = "";
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${apiKey}`;
             try {
@@ -561,10 +551,9 @@
             } catch (error) { console.error('Image compositing failed:', error); return null; }
         }
 
-        async function generateCampaign(productName, platforms, imageBase64 = null) {
-            let campaignPrompt;
+        async function generateCampaign(productName, platforms, image = null) {
             const basePrompt = `Create a social media campaign for the following platforms: ${platforms.join(', ')}. For each platform, provide a "headline", "ad_copy", "visual_concept", and "call_to_action". Focus on highlighting the scientific and botanical benefits of the product. Format as a single JSON array of objects. Each object in the array should represent a platform and contain the keys "platform_name", "headline", "ad_copy", "visual_concept", and "call_to_action".`;
-
+            
             const payload = {
                 contents: [{ role: "user", parts: [] }],
                 generationConfig: {
@@ -585,13 +574,14 @@
                     }
                 }
             };
-
-            if (imageBase64) {
-                const productDescription = await analyzeProduct(imageBase64);
+            
+            let campaignPrompt;
+            if (image && image.data) {
+                const productDescription = await analyzeProduct(image.data, image.type);
                 const effectiveProductName = productName || productDescription;
                 campaignPrompt = `Based on the image of a ${effectiveProductName}, ${basePrompt}`;
                 payload.contents[0].parts.push({ text: campaignPrompt });
-                payload.contents[0].parts.push({ inlineData: { mimeType: "image/jpeg", data: imageBase64 } });
+                payload.contents[0].parts.push({ inlineData: { mimeType: image.type, data: image.data } });
             } else {
                 campaignPrompt = `Create a campaign for a product called "${productName}". ${basePrompt}`;
                 payload.contents[0].parts.push({ text: campaignPrompt });
@@ -623,18 +613,18 @@
 
         async function handleGenerateAd() {
             const prompt = backgroundPromptInput.value.trim();
-            if (!prompt || !productImageBase64) return showMessageBox('Please enter a prompt and upload an image.', true);
+            if (!prompt || !productImage) return showMessageBox('Please enter a prompt and upload an image.', true);
             generateAdBtn.disabled = true;
             generateAdBtn.innerHTML = `Generating...`;
             overlay.classList.remove('hidden');
             overlayText.textContent = 'Analyzing product...';
             try {
-                const productDescription = await analyzeProduct(productImageBase64);
+                const productDescription = await analyzeProduct(productImage.data, productImage.type);
                 overlayText.textContent = 'Generating ad copy...';
                 const adCopy = await generateAdCopy(prompt, productDescription);
                 adCopyText.textContent = adCopy;
                 overlayText.textContent = 'Compositing final ad image...';
-                finalAdImageBase64 = await compositeAdWithAI(prompt, adCopy, productImageBase64);
+                finalAdImageBase64 = await compositeAdWithAI(prompt, adCopy, productImage.data, productImage.type);
                 if (finalAdImageBase64) {
                     adImage.src = `data:image/png;base64,${finalAdImageBase64}`;
                     overlay.classList.add('hidden');
@@ -649,24 +639,28 @@
                 generateAdBtn.innerHTML = 'Generate Ad';
             }
         }
-
-        async function handleImageUpload(event) {
-            const file = event.target.files[0];
-            if (file) {
-                uploadLabel.textContent = `Uploaded: ${file.name}`;
-                uploadLabel.classList.remove('bg-gray-700', 'hover:bg-gray-600');
-                uploadLabel.classList.add('bg-green-600', 'text-white');
-                productImageBase64 = await fileToBase64(file);
-            }
+        
+        function setupFileUpload() {
+            const productImageUpload = document.getElementById('productImageUpload');
+            const uploadLabel = document.getElementById('uploadLabel');
+            
+            productImageUpload.addEventListener('change', async (event) => {
+                 const file = event.target.files[0];
+                if (file) {
+                    uploadLabel.textContent = `Uploaded: ${file.name}`;
+                    uploadLabel.classList.add('bg-green-600', 'text-white');
+                    productImage = await fileToBase64(file);
+                }
+            });
         }
+
 
         async function handleCampaignImageUpload(event) {
             const file = event.target.files[0];
             if (file) {
                 campaignUploadLabel.textContent = `Uploaded: ${file.name}`;
-                campaignUploadLabel.classList.remove('bg-gray-700', 'hover:bg-gray-600');
                 campaignUploadLabel.classList.add('bg-green-600', 'text-white');
-                campaignImageBase64 = await fileToBase64(file);
+                campaignImage = await fileToBase64(file);
             }
         }
 
@@ -697,32 +691,48 @@
             connectAndLaunchBtn.innerHTML = 'Launching...';
 
             setTimeout(() => {
-// ... existing code ... -->
-                showDashboardBtn.click();
+                closeMetaConnectModal();
+                showMessageBox(`Campaign (simulation) launched successfully! Ad saved to dashboard.`);
+
+                const adCopyContent = adCopyText.textContent;
+                let headline = "Newly Launched Ad";
+                if (adCopyContent && adCopyContent.includes("Headline:")) {
+                    headline = adCopyContent.split("Headline:")[1].split("Body:")[0].trim();
+                }
+                const reach = (Math.random() * 5 + 1).toFixed(1) + 'K';
+                const clicks = (Math.random() * 500 + 100).toFixed(0);
+                const ctr = (Math.random() * 5 + 2).toFixed(1) + '%';
+
+                const adData = {
+                    imageBase64: `data:image/png;base64,${finalAdImageBase64}`,
+                    headline: headline,
+                    reach: reach,
+                    clicks: clicks,
+                    ctr: ctr
+                };
+
+                saveAdToDashboard(adData);
+
+                connectAndLaunchBtn.disabled = false;
+                connectAndLaunchBtn.innerHTML = 'Connect & Launch';
+                
+                showDashboardBtn.click(); 
+
             }, 2000);
         }
 
         function handleReset() {
             backgroundPromptInput.value = '';
-            uploadLabel.textContent = 'Upload Product Image';
-            uploadLabel.classList.remove('bg-green-600', 'text-white');
-            uploadLabel.classList.add('bg-gray-700', 'hover:bg-gray-600');
             
-            // --- FIX START ---
-            // The most reliable way to reset a file input is to replace it entirely.
-            // This ensures the 'change' event fires even if the same file is selected again.
-            const oldInput = document.getElementById('productImageUpload');
-            const newInput = oldInput.cloneNode(true); // Create a fresh copy
-            oldInput.parentNode.replaceChild(newInput, oldInput); // Replace the old input with the new one
-            
-            // Update our script's reference to point to the new input element
-            productImageUpload = newInput;
-            
-            // Re-attach the event listener to the new input element
-            productImageUpload.addEventListener('change', handleImageUpload);
-            // --- FIX END ---
+            // Re-create the file input to ensure it can be re-used
+            uploadContainer.innerHTML = `
+                <label id="uploadLabel" class="cursor-pointer mt-4 w-full text-gray-200 font-bold py-3 px-6 rounded-xl shadow-md text-center bg-gray-700 hover:bg-gray-600 block transition-colors">
+                    Upload Product Image
+                    <input type="file" id="productImageUpload" accept="image/*" class="hidden" />
+                </label>`;
+            setupFileUpload(); // Re-attach the event listener to the new input
 
-            productImageBase64 = null;
+            productImage = null;
             finalAdImageBase64 = null;
             adImage.src = '';
             adCopyContainer.classList.add('hidden');
@@ -737,13 +747,13 @@
         async function handleGenerateCampaign() {
             const productName = productNameInput.value.trim();
             const platforms = $('#platforms').val();
-            if ((!productName && !campaignImageBase64) || platforms.length === 0) return showMessageBox('Please provide a product name or image and select platforms.', true);
+            if ((!productName && !campaignImage) || platforms.length === 0) return showMessageBox('Please provide a product name or image and select platforms.', true);
             
             generateCampaignBtn.disabled = true;
             generateCampaignBtn.textContent = 'Generating...';
             campaignOutput.innerHTML = `<div class="col-span-2 text-center p-4 text-gray-400">Generating campaign...</div>`;
             
-            const campaignData = await generateCampaign(productName, platforms, campaignImageBase64);
+            const campaignData = await generateCampaign(productName, platforms, campaignImage);
 
             if (campaignData) {
                 campaignOutput.innerHTML = '';
@@ -775,8 +785,8 @@
                     else downloadBtnElement.classList.remove('cursor-not-allowed', 'opacity-50');
                     downloadBtnElement.addEventListener('click', handleDownloadVisual);
 
-                    if (campaignImageBase64) {
-                        imgElement.src = `data:image/png;base64,${campaignImageBase64}`;
+                    if (campaignImage && campaignImage.data) {
+                        imgElement.src = `data:${campaignImage.type};base64,${campaignImage.data}`;
                         imgElement.classList.remove('hidden');
                         loaderElement.classList.add('hidden');
                         controlsElement.classList.remove('hidden');
@@ -811,14 +821,18 @@
             const concept = button.dataset.concept;
             const imgElement = document.getElementById(`img-${platform}`);
 
-            if (imgElement && imgElement.src) {
+            if (imgElement && imgElement.src && imgElement.src.startsWith('data:image')) {
                 showAdGeneratorBtn.click();
                 backgroundPromptInput.value = concept;
-                const base64Data = imgElement.src.split(',')[1];
-                productImageBase64 = base64Data;
+                
+                const [header, data] = imgElement.src.split(',');
+                const type = header.split(':')[1].split(';')[0];
+
+                productImage = { data, type };
                 adImage.src = imgElement.src;
+                
+                const uploadLabel = document.getElementById('uploadLabel');
                 uploadLabel.textContent = `Using image from ${platform} campaign`;
-                uploadLabel.classList.remove('bg-gray-700', 'hover:bg-gray-600');
                 uploadLabel.classList.add('bg-green-600', 'text-white');
                 overlay.classList.add('hidden');
                 showMessageBox(`Loaded visual concept from ${platform} into Ad Generator.`);
@@ -828,115 +842,22 @@
             }
         }
 
-        // --- PayPal and UI Update Logic ---
-        function updateUIAfterPurchase(pricingCard, planName) {
-            showMessageBox(`Payment for ${planName} plan successful! Your plan is now active.`);
-            
-            pricingCard.classList.remove('border-pink-500');
-            pricingCard.classList.add('current-plan', 'border-green-500', 'border-2');
-            
-            document.querySelectorAll('.pricing-card').forEach(card => {
-                const buttonContainer = card.querySelector('.paypal-button-container');
-                if (card.classList.contains('current-plan')) {
-                    buttonContainer.innerHTML = `<div class="text-center w-full bg-green-600 text-white px-6 py-2 rounded-lg font-semibold">Current Plan: ${planName}</div>`;
-                } else {
-                    buttonContainer.innerHTML = `<div class="text-center w-full bg-gray-600 text-white px-6 py-2 rounded-lg font-semibold opacity-50">Unavailable</div>`;
-                }
-            });
-        }
-
-        function initializePayPalButtons() {
-            if (typeof paypal_sdk === 'undefined') {
-                console.error("PayPal SDK not loaded.");
-                document.querySelectorAll('.paypal-button-container').forEach(container => {
-                    container.innerHTML = `<div class="text-center text-red-500 p-2 rounded-lg bg-red-900/50">Payment system failed to load.</div>`;
-                });
-                return;
-            }
-
-            document.querySelectorAll('.paypal-button-container').forEach(container => {
-                const planName = container.dataset.planName;
-                const planPrice = container.dataset.planPrice;
-                const pricingCard = container.closest('.pricing-card');
-
-                paypal_sdk.Buttons({
-                    onClick: (data, actions) => {
-                        if (isTrial) {
-                            showMessageBox('Please sign up to purchase a plan!', true);
-                            openSignupModal();
-                            return actions.reject();
-                        }
-                        const alreadyPurchased = document.querySelector('.current-plan');
-                        if(alreadyPurchased) {
-                            showMessageBox('You already have an active plan.', true);
-                            return actions.reject();
-                        }
-                        return actions.resolve();
-                    },
-                    createOrder: (data, actions) => {
-                        return actions.order.create({
-                            purchase_units: [{
-                                description: `${planName} Plan`,
-                                amount: {
-                                    value: planPrice
-                                }
-                            }]
-                        });
-                    },
-                    onApprove: (data, actions) => {
-                        return actions.order.capture().then(details => {
-                            updateUIAfterPurchase(pricingCard, planName);
-                        });
-                    },
-                    onError: (err) => {
-                        console.error('PayPal Error:', err);
-                        showMessageBox('An error occurred with your payment.', true);
-                    }
-                }).render(`#${container.id}`);
-            });
-        }
-
         window.addEventListener('load', () => {
-            productImageUpload = document.getElementById('productImageUpload');
-            uploadLabel = document.getElementById('uploadLabel');
+            setupFileUpload();
             generateAdBtn.addEventListener('click', handleGenerateAd);
             resetBtn.addEventListener('click', handleReset);
-            productImageUpload.addEventListener('change', handleImageUpload);
             campaignImageUpload.addEventListener('change', handleCampaignImageUpload);
             downloadBtn.addEventListener('click', handleDownloadAd);
             generateCampaignBtn.addEventListener('click', handleGenerateCampaign);
             launchToMetaBtn.addEventListener('click', openMetaConnectModal);
-            initializePayPalButtons();
+            clearDashboardBtn.addEventListener('click', clearDashboard);
             
-            copyAdBtn.addEventListener('click', () => {
-                const textToCopy = adCopyText.textContent;
-                if (!textToCopy) return;
-
-                const textArea = document.createElement('textarea');
-                textArea.value = textToCopy;
-                textArea.style.position = 'fixed';
-                textArea.style.top = '0';
-                textArea.style.left = '0';
-                textArea.style.opacity = '0';
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-
-                try {
-                    const successful = document.execCommand('copy');
-                    if(successful) {
-                        showMessageBox('Ad copy copied to clipboard!');
-                    } else {
-                        showMessageBox('Failed to copy ad copy.', true);
-                    }
-                } catch (err) {
-                    console.error('Copy to clipboard failed:', err);
-                    showMessageBox('Failed to copy ad copy.', true);
-                }
-
-                document.body.removeChild(textArea);
+             copyAdBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(adCopyText.textContent)
+                    .then(() => showMessageBox('Ad copy copied to clipboard!'))
+                    .catch(err => showMessageBox('Failed to copy text.', true));
             });
-
+            
             connectAndLaunchBtn.addEventListener('click', () => {
                 const metaId = metaAdAccountIdInput.value.trim();
                 if (!metaId) {
@@ -984,10 +905,9 @@
                 showAdGeneratorBtn.classList.remove('bg-indigo-600', 'text-white');
                 showCampaignMakerBtn.classList.add('bg-gray-200', 'text-gray-800');
                 showCampaignMakerBtn.classList.remove('bg-indigo-600', 'text-white');
+                loadAdsToDashboard();
             });
 
-            const addNewAdCard = document.getElementById('addNewAdCard');
-            const addNewAdBtn = document.getElementById('addNewAdBtn');
             addNewAdCard.addEventListener('click', () => showAdGeneratorBtn.click());
             addNewAdBtn.addEventListener('click', () => showAdGeneratorBtn.click());
 
@@ -1004,10 +924,68 @@
                     showMessageBox('Please enter a valid email.', true);
                 }
             });
+            
+             // PayPal Logic
+            let selectedPlan = {};
+            document.querySelectorAll('.pay-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    if (isTrial) {
+                        showMessageBox('Please create a free account first!', true);
+                        openSignupModal();
+                        return;
+                    }
+                    selectedPlan.name = event.target.dataset.plan;
+                    selectedPlan.price = event.target.dataset.price;
+
+                    document.getElementById('paypal-button-container').innerHTML = '';
+                    
+                    if (window.paypal) {
+                         window.paypal.Buttons({
+                            createOrder: (data, actions) => {
+                                return actions.order.create({
+                                    purchase_units: [{
+                                        description: `Soul Tribe Ad Generator - ${selectedPlan.name} Plan`,
+                                        amount: {
+                                            value: selectedPlan.price
+                                        }
+                                    }]
+                                });
+                            },
+                            onApprove: async (data, actions) => {
+                                const order = await actions.order.capture();
+                                console.log('Capture result', order, JSON.stringify(order, null, 2));
+                                document.getElementById('payment-success-message').textContent = `Payment for ${selectedPlan.name} plan successful!`;
+                                document.getElementById('payment-success-message').classList.remove('hidden');
+                                document.getElementById('paypal-button-container').innerHTML = '';
+                                
+                                document.querySelectorAll('.pay-btn').forEach(btn => {
+                                    if(btn.dataset.plan === selectedPlan.name) {
+                                        btn.textContent = 'Current Plan';
+                                        btn.disabled = true;
+                                        btn.classList.add('bg-gray-500');
+                                    } else {
+                                        btn.disabled = true;
+                                        btn.classList.add('opacity-50', 'cursor-not-allowed');
+                                    }
+                                });
+                            },
+                            onError: (err) => {
+                                console.error('An error occurred with your payment:', err);
+                                showMessageBox('An error occurred with your payment.', true);
+                            }
+                        }).render('#paypal-button-container');
+                    } else {
+                         console.error('PayPal SDK not loaded.');
+                         showMessageBox('PayPal is not available. Please try again later.', true);
+                    }
+                });
+            });
         });
     </script>
 </body>
 </html>
+
+
 
 
 
