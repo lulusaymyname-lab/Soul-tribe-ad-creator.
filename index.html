@@ -85,7 +85,7 @@
 <body class="bg-gray-900 text-white">
 
     <!-- =================================================================== -->
-    <!-- Main Landing Page UI                                               -->
+    <!-- Main Landing Page UI                                                -->
     <!-- =================================================================== -->
     <div id="landingPage">
         <!-- Hero Section -->
@@ -236,7 +236,7 @@
                     <h2 class="text-3xl font-bold">My Ads Dashboard</h2>
                      <div class="flex space-x-4">
                          <button id="clearDashboardBtn" class="bg-red-600 text-white font-bold py-2 px-6 rounded-xl transition-colors hover:bg-red-700">Clear All Ads</button>
-                        <button id="addNewAdBtn" class="bg-indigo-600 text-white font-bold py-2 px-6 rounded-xl transition-colors hover:bg-indigo-700">Create New Ad</button>
+                         <button id="addNewAdBtn" class="bg-indigo-600 text-white font-bold py-2 px-6 rounded-xl transition-colors hover:bg-indigo-700">Create New Ad</button>
                     </div>
                 </div>
                 <div class="max-w-7xl mx-auto">
@@ -262,11 +262,11 @@
                          You can get a free key from Google AI Studio.
                      </p>
                      <div class="flex flex-col space-y-4">
-                        <label for="apiKeyInput" class="font-semibold text-gray-300">Your Google AI API Key:</label>
-                        <input type="password" id="apiKeyInput" placeholder="Enter your API key" class="p-3 rounded-xl border border-gray-700 bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <button id="saveApiKeyBtn" class="bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition-colors">Save Key</button>
-                        <a href="https://makersuite.google.com/app/apikey" target="_blank" class="text-center text-indigo-400 hover:underline">Get your API Key here &rarr;</a>
-                    </div>
+                         <label for="apiKeyInput" class="font-semibold text-gray-300">Your Google AI API Key:</label>
+                         <input type="password" id="apiKeyInput" placeholder="Enter your API key" class="p-3 rounded-xl border border-gray-700 bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                         <button id="saveApiKeyBtn" class="bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition-colors">Save Key</button>
+                         <a href="https://makersuite.google.com/app/apikey" target="_blank" class="text-center text-indigo-400 hover:underline">Get your API Key here &rarr;</a>
+                     </div>
                  </div>
             </div>
 
@@ -341,26 +341,60 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://www.paypal.com/sdk/js?client-id=AQ8g25vryYQYUSh_-_s-3JEDIl01nQ1-p-R3g_48hpv-pCf3o2Oq2T_Vb-g-3FkGdwQKxgtqO3G0pe4P&currency=USD" data-sdk-integration-source="developer-studio"></script>
-
-    <script>
-        // --- App State ---
-        let isTrial = true;
-        
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, setDoc, getDocs, doc, query, onSnapshot, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    
+        // Firebase Setup
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        let db, auth;
+        let userId = null;
+    
+        // Initialize Firebase
+        if (Object.keys(firebaseConfig).length > 0) {
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            
+            // Sign in anonymously if no token is available
+            (async () => {
+                const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                if (initialAuthToken) {
+                    try {
+                        const userCredential = await signInWithCustomToken(auth, initialAuthToken);
+                        userId = userCredential.user.uid;
+                        console.log("Signed in with custom token. User ID:", userId);
+                    } catch (error) {
+                        console.error("Custom token sign-in failed:", error);
+                        try {
+                            const userCredential = await signInAnonymously(auth);
+                            userId = userCredential.user.uid;
+                            console.log("Signed in anonymously. User ID:", userId);
+                        } catch (anonError) {
+                            console.error("Anonymous sign-in failed:", anonError);
+                        }
+                    }
+                } else {
+                    try {
+                        const userCredential = await signInAnonymously(auth);
+                        userId = userCredential.user.uid;
+                        console.log("Signed in anonymously. User ID:", userId);
+                    } catch (anonError) {
+                        console.error("Anonymous sign-in failed:", anonError);
+                    }
+                }
+            })();
+        } else {
+            console.error("Firebase config is not available. Firestore functionality will be disabled.");
+        }
+    
         // --- Modal Logic ---
         const signupModal = document.getElementById('signupModal');
         const metaConnectModal = document.getElementById('metaConnectModal');
-        function openSignupModal() {
-            signupModal.classList.add('active');
-        }
-        function closeSignupModal() {
-            signupModal.classList.remove('active');
-        }
+    
         function openMetaConnectModal() {
-            if (isTrial) {
-                showMessageBox('Please sign up to launch campaigns!', true);
-                openSignupModal();
-                return;
-            }
             if (!finalAdImageBase64 || !adCopyText.textContent) {
                 showMessageBox('Please generate an ad first before launching.', true);
                 return;
@@ -385,12 +419,11 @@
             { src: "https://i.imgur.com/90tB2Gc.png", title: "Radiant Serum" },
             { src: "https://i.imgur.com/CgRamm8.png", title: "Purifying Clay Mask" },
         ];
-
+    
         function initializeScroller() {
             const scrollerInner = document.querySelector('.scroller__inner');
             if (scrollerInner) {
                 scrollerInner.innerHTML = ''; // Clear existing content
-                // Duplicate images for infinite scroll effect
                 const combinedCarousel = [...carouselData, ...carouselData];
                 combinedCarousel.forEach(item => {
                     const img = document.createElement('img');
@@ -403,14 +436,14 @@
         }
         
         initializeScroller();
-
+    
         // ===================================================================
         // Ad & Campaign Generator App Logic
         // ===================================================================
         $(document).ready(function() {
             $('#platforms').select2();
         });
-
+    
         // DOM element references
         const uploadContainer = document.getElementById('uploadContainer');
         const backgroundPromptInput = document.getElementById('backgroundPrompt');
@@ -434,7 +467,6 @@
         const campaignOutput = document.getElementById('campaignOutput');
         const campaignImageUpload = document.getElementById('campaignImageUpload');
         const campaignUploadLabel = document.getElementById('campaignUploadLabel');
-        const signupForm = document.getElementById('signupForm');
         const showDashboardBtn = document.getElementById('showDashboardBtn');
         const myAdsDashboardSection = document.getElementById('myAdsDashboardSection');
         const launchToMetaContainer = document.getElementById('launchToMetaContainer');
@@ -448,59 +480,93 @@
         const settingsSection = document.getElementById('settingsSection');
         const apiKeyInput = document.getElementById('apiKeyInput');
         const saveApiKeyBtn = document.getElementById('saveApiKeyBtn');
-
+    
         let productImage = null;
-        let finalAdImageBase64 = null; // This will hold the raw base64 string
+        let finalAdImageBase64 = null;
         let campaignImage = null;
-
-        // --- Dashboard Storage Logic ---
-        function saveAdToDashboard(adData) {
-            let ads = JSON.parse(localStorage.getItem('savedAds')) || [];
-            ads.unshift(adData); // Add new ad to the beginning
-            localStorage.setItem('savedAds', JSON.stringify(ads));
+    
+        // --- Dashboard & Firestore Logic ---
+        function getAdsCollectionRef() {
+            if (!db || !userId) {
+                console.error("Firestore DB or User ID is not available.");
+                return null;
+            }
+            return collection(db, `artifacts/${appId}/users/${userId}/ads`);
         }
-
+    
+        async function saveAdToDashboard(adData) {
+            const adsRef = getAdsCollectionRef();
+            if (!adsRef) return;
+            try {
+                await addDoc(adsRef, adData);
+                showMessageBox("Ad saved to your dashboard!");
+            } catch (error) {
+                console.error("Error saving ad:", error);
+                showMessageBox("Failed to save ad.", true);
+            }
+        }
+    
         function loadAdsToDashboard() {
             const adsDashboardGrid = document.getElementById('adsDashboardGrid');
-            const addNewAdCard = document.getElementById('addNewAdCard'); // Keep reference to the "add new" card
-            adsDashboardGrid.innerHTML = ''; // Clear the grid completely
+            adsDashboardGrid.innerHTML = '';
             
-            let ads = JSON.parse(localStorage.getItem('savedAds')) || [];
-            
-            if (ads.length === 0) {
-                 const placeholderCard = document.createElement('div');
-                 placeholderCard.className = 'text-center text-gray-400 col-span-1 md:col-span-2 lg:col-span-3 py-10';
-                 placeholderCard.innerHTML = `<p>You haven't launched any ads yet.</p><p>Create an ad and click "Launch" to save it here!</p>`;
-                 adsDashboardGrid.appendChild(placeholderCard);
-            } else {
-                ads.forEach(ad => {
-                    const adCard = document.createElement('div');
-                    adCard.className = 'bg-gray-800 rounded-2xl border border-gray-700 overflow-hidden';
-                    adCard.innerHTML = `
-                        <img src="${ad.imageBase64}" alt="Ad Preview" class="w-full h-64 object-cover">
-                        <div class="p-6">
-                            <h3 class="font-semibold text-white mb-2">"${ad.headline}"</h3>
-                            <p class="text-sm text-gray-400 mb-4">Status: <span class="font-semibold text-yellow-400">In Review</span></p>
-                            <div class="grid grid-cols-3 gap-4 text-center">
-                                <div><p class="text-xs text-gray-400">Reach</p><p class="text-lg font-bold text-white">${ad.reach}</p></div>
-                                <div><p class="text-xs text-gray-400">Clicks</p><p class="text-lg font-bold text-white">${ad.clicks}</p></div>
-                                <div><p class="text-xs text-gray-400">CTR</p><p class="text-lg font-bold text-white">${ad.ctr}</p></div>
-                            </div>
-                            <button class="mt-4 w-full bg-gray-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors">View Performance</button>
-                        </div>`;
-                    adsDashboardGrid.appendChild(adCard);
-                });
+            if (!userId) {
+                adsDashboardGrid.innerHTML = `<div class="col-span-1 md:col-span-2 lg:col-span-3 text-center text-red-500 py-10">User not authenticated. Please refresh.</div>`;
+                adsDashboardGrid.appendChild(addNewAdCard);
+                return;
             }
-            adsDashboardGrid.appendChild(addNewAdCard); // Always re-append the "Add New" card at the end
+    
+            const adsRef = getAdsCollectionRef();
+            if (!adsRef) return;
+    
+            const q = query(adsRef);
+            onSnapshot(q, (querySnapshot) => {
+                adsDashboardGrid.innerHTML = ''; // Clear the grid for real-time updates
+                
+                if (querySnapshot.empty) {
+                    const placeholderCard = document.createElement('div');
+                    placeholderCard.className = 'text-center text-gray-400 col-span-1 md:col-span-2 lg:col-span-3 py-10';
+                    placeholderCard.innerHTML = `<p>You haven't launched any ads yet.</p><p>Create an ad and click "Launch" to save it here!</p>`;
+                    adsDashboardGrid.appendChild(placeholderCard);
+                } else {
+                    querySnapshot.forEach(doc => {
+                        const ad = doc.data();
+                        const adCard = document.createElement('div');
+                        adCard.className = 'bg-gray-800 rounded-2xl border border-gray-700 overflow-hidden';
+                        adCard.innerHTML = `
+                            <img src="${ad.imageBase64}" alt="Ad Preview" class="w-full h-64 object-cover">
+                            <div class="p-6">
+                                <h3 class="font-semibold text-white mb-2">"${ad.headline}"</h3>
+                                <p class="text-sm text-gray-400 mb-4">Status: <span class="font-semibold text-yellow-400">In Review</span></p>
+                                <div class="grid grid-cols-3 gap-4 text-center">
+                                    <div><p class="text-xs text-gray-400">Reach</p><p class="text-lg font-bold text-white">${ad.reach}</p></div>
+                                    <div><p class="text-xs text-gray-400">Clicks</p><p class="text-lg font-bold text-white">${ad.clicks}</p></div>
+                                    <div><p class="text-xs text-gray-400">CTR</p><p class="text-lg font-bold text-white">${ad.ctr}</p></div>
+                                </div>
+                                <button class="mt-4 w-full bg-gray-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors">View Performance</button>
+                            </div>`;
+                        adsDashboardGrid.appendChild(adCard);
+                    });
+                }
+                adsDashboardGrid.appendChild(addNewAdCard); // Always re-append the "Add New" card
+            });
         }
-        
-        function clearDashboard() {
-            // Removed the confirm() dialog which does not work reliably in the iframe environment.
-            localStorage.removeItem('savedAds');
-            loadAdsToDashboard();
-            showMessageBox('Dashboard cleared successfully.');
+    
+        async function clearDashboard() {
+            const adsRef = getAdsCollectionRef();
+            if (!adsRef) return;
+            try {
+                const q = query(adsRef);
+                const querySnapshot = await getDocs(q);
+                const deletePromises = querySnapshot.docs.map(docToDelete => deleteDoc(doc(db, adsRef.path, docToDelete.id)));
+                await Promise.all(deletePromises);
+                showMessageBox('Dashboard cleared successfully.');
+            } catch (error) {
+                console.error("Error clearing dashboard:", error);
+                showMessageBox("Failed to clear dashboard.", true);
+            }
         }
-
+    
         function showMessageBox(message, isError = false) {
             messageBox.textContent = message;
             messageBox.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
@@ -511,7 +577,7 @@
                 messageBox.classList.add('opacity-0', '-translate-y-full');
             }, 3000);
         }
-
+    
         function fileToBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -524,21 +590,44 @@
             });
         }
         
-        function getApiKey() {
-            return localStorage.getItem('geminiApiKey');
+        async function getApiKey() {
+            if (!userId || !db) return null;
+            try {
+                const docRef = doc(db, `artifacts/${appId}/users/${userId}/settings/api`);
+                const docSnap = await getDoc(docRef);
+                return docSnap.exists() ? docSnap.data().key : null;
+            } catch (error) {
+                console.error("Error fetching API key:", error);
+                return null;
+            }
         }
-
+    
+        async function saveApiKey(key) {
+            if (!userId || !db) {
+                showMessageBox("User not authenticated. Cannot save API key.", true);
+                return;
+            }
+            try {
+                const docRef = doc(db, `artifacts/${appId}/users/${userId}/settings/api`);
+                await setDoc(docRef, { key });
+                showMessageBox('API Key saved successfully!');
+            } catch (error) {
+                console.error("Error saving API key:", error);
+                showMessageBox('Failed to save API Key.', true);
+            }
+        }
+    
         function downloadBase64Image(base64Data, filename) {
             const link = document.createElement('a');
             link.download = filename;
-            link.href = base64Data; // Requires full data URL
+            link.href = base64Data;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         }
         
         async function analyzeProduct(base64ImageData, imageType) {
-            const apiKey = getApiKey();
+            const apiKey = await getApiKey();
             if (!apiKey) throw new Error('API Key not set.');
             const analyzePrompt = "Identify the main product and its key features in the image. Focus on a factual description of what the item is, for use in an ad campaign.";
             const payload = { contents: [{ parts: [ { text: analyzePrompt }, { inlineData: { mimeType: imageType, data: base64ImageData } } ] }] };
@@ -550,9 +639,9 @@
                 return result?.candidates?.[0]?.content?.parts?.[0]?.text || "product";
             } catch (error) { console.error(`Product analysis failed:`, error); return "product"; }
         }
-
+    
         async function generateAdCopy(prompt, productDescription) {
-            const apiKey = getApiKey();
+            const apiKey = await getApiKey();
             if (!apiKey) throw new Error('API Key not set.');
             if (!prompt || !productDescription) return null;
             let textPrompt = `Create a compelling, short ad for a ${productDescription.toLowerCase()} with a background of: "${prompt}". Provide a punchy headline and a brief body text. Emphasize botanical ingredients and scientific benefits. Format as: Headline: [Your Headline] Body: [Your Body Text]`;
@@ -567,7 +656,7 @@
         }
         
         async function compositeAdWithAI(prompt, adCopy, productImageBase64, imageType) {
-            const apiKey = getApiKey();
+            const apiKey = await getApiKey();
             if (!apiKey) throw new Error('API Key not set.');
             const newPrompt = `Create a professional marketing ad. The background should be: "${prompt}". Place the provided product image prominently. Integrate the ad copy seamlessly into the design. Ad copy: "${adCopy}". Ensure the final image is visually appealing and high-resolution.`;
             const payload = { contents: [{ parts: [ { text: newPrompt }, { inlineData: { mimeType: imageType, data: productImageBase64 } } ] }], generationConfig: { responseModalities: ['TEXT', 'IMAGE'] } };
@@ -579,9 +668,9 @@
                 return result?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
             } catch (error) { console.error('Image compositing failed:', error); return null; }
         }
-
+    
         async function generateCampaign(productName, platforms, image = null) {
-            const apiKey = getApiKey();
+            const apiKey = await getApiKey();
             if (!apiKey) throw new Error('API Key not set.');
             const basePrompt = `Create a social media campaign for the following platforms: ${platforms.join(', ')}. For each platform, provide a "headline", "ad_copy", "visual_concept", and "call_to_action". Focus on highlighting the scientific and botanical benefits of the product. Format as a single JSON array of objects. Each object in the array should represent a platform and contain the keys "platform_name", "headline", "ad_copy", "visual_concept", and "call_to_action".`;
             
@@ -617,7 +706,7 @@
                 campaignPrompt = `Create a campaign for a product called "${productName}". ${basePrompt}`;
                 payload.contents[0].parts.push({ text: campaignPrompt });
             }
-
+    
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
             try {
                 const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -628,9 +717,9 @@
                 return JSON.parse(textResponse);
             } catch (error) { console.error('Campaign generation failed:', error); return null; }
         }
-
+    
         async function generateCampaignVisual(prompt) {
-            const apiKey = getApiKey();
+            const apiKey = await getApiKey();
             if (!apiKey) throw new Error('API Key not set.');
             const payload = { instances: [{ prompt: prompt }], parameters: { "sampleCount": 1 } };
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
@@ -641,9 +730,10 @@
                 return result.predictions?.[0]?.bytesBase64Encoded;
             } catch (error) { console.error('Campaign visual generation failed:', error); return null; }
         }
-
+    
         async function handleGenerateAd() {
-            if (!getApiKey()) {
+            const apiKey = await getApiKey();
+            if (!apiKey) {
                 showMessageBox('Please add your Google AI API key in Settings first.', true);
                 showSettingsBtn.click();
                 return;
@@ -681,7 +771,7 @@
             const uploadLabel = document.getElementById('uploadLabel');
             
             productImageUpload.addEventListener('change', async (event) => {
-                 const file = event.target.files[0];
+                const file = event.target.files[0];
                 if (file) {
                     uploadLabel.textContent = `Uploaded: ${file.name}`;
                     uploadLabel.classList.add('bg-green-600', 'text-white');
@@ -689,8 +779,8 @@
                 }
             });
         }
-
-
+    
+    
         async function handleCampaignImageUpload(event) {
             const file = event.target.files[0];
             if (file) {
@@ -699,37 +789,27 @@
                 campaignImage = await fileToBase64(file);
             }
         }
-
+    
         function handleDownloadAd() {
-            if (isTrial) {
-                showMessageBox('Please sign up to download your ad!', true);
-                openSignupModal();
-                return;
-            }
             if (!finalAdImageBase64) return showMessageBox('Please generate an ad first.', true);
             downloadBase64Image(`data:image/png;base64,${finalAdImageBase64}`, 'composite-ad.png');
         }
-
+    
         function handleDownloadVisual(event) {
-            if (isTrial) {
-                showMessageBox('Please sign up to download visuals!', true);
-                openSignupModal();
-                return;
-            }
             const button = event.target.closest('button');
             const platform = button.dataset.platform;
             const imgElement = document.getElementById(`img-${platform}`);
             if (imgElement && imgElement.src) downloadBase64Image(imgElement.src, `${platform}-visual.png`);
         }
         
-        function handleLaunchToMeta(metaId) {
+        async function handleLaunchToMeta(metaId) {
             connectAndLaunchBtn.disabled = true;
             connectAndLaunchBtn.innerHTML = 'Launching...';
-
-            setTimeout(() => {
+    
+            setTimeout(async () => {
                 closeMetaConnectModal();
                 showMessageBox(`Campaign (simulation) launched successfully! Ad saved to dashboard.`);
-
+    
                 const adCopyContent = adCopyText.textContent;
                 let headline = "Newly Launched Ad";
                 if (adCopyContent && adCopyContent.includes("Headline:")) {
@@ -738,7 +818,7 @@
                 const reach = (Math.random() * 5 + 1).toFixed(1) + 'K';
                 const clicks = (Math.random() * 500 + 100).toFixed(0);
                 const ctr = (Math.random() * 5 + 2).toFixed(1) + '%';
-
+    
                 const adData = {
                     imageBase64: `data:image/png;base64,${finalAdImageBase64}`,
                     headline: headline,
@@ -746,28 +826,27 @@
                     clicks: clicks,
                     ctr: ctr
                 };
-
-                saveAdToDashboard(adData);
-
+    
+                await saveAdToDashboard(adData);
+    
                 connectAndLaunchBtn.disabled = false;
                 connectAndLaunchBtn.innerHTML = 'Connect & Launch';
                 
-                showDashboardBtn.click(); 
-
+                showDashboardBtn.click();
+    
             }, 2000);
         }
-
+    
         function handleReset() {
             backgroundPromptInput.value = '';
             
-            // Re-create the file input to ensure it can be re-used
             uploadContainer.innerHTML = `
                 <label id="uploadLabel" class="cursor-pointer mt-4 w-full text-gray-200 font-bold py-3 px-6 rounded-xl shadow-md text-center bg-gray-700 hover:bg-gray-600 block transition-colors">
                     Upload Product Image
                     <input type="file" id="productImageUpload" accept="image/*" class="hidden" />
                 </label>`;
-            setupFileUpload(); // Re-attach the event listener to the new input
-
+            setupFileUpload();
+    
             productImage = null;
             finalAdImageBase64 = null;
             adImage.src = '';
@@ -779,9 +858,10 @@
             overlayText.textContent = 'Enter a prompt and upload an image.';
             showMessageBox('Generator has been reset.');
         }
-
+    
         async function handleGenerateCampaign() {
-            if (!getApiKey()) {
+            const apiKey = await getApiKey();
+            if (!apiKey) {
                 showMessageBox('Please add your Google AI API key in Settings first.', true);
                 showSettingsBtn.click();
                 return;
@@ -813,7 +893,7 @@
                                 <div id="loader-${platform}" class="text-gray-400">Loading visual...</div>
                             </div>
                             <div id="controls-${platform}" class="mt-4 flex space-x-2 hidden">
-                                <button class="download-visual-btn flex-1 bg-green-600 text-white text-sm py-2 px-3 rounded-lg hover:bg-green-700 transition-colors">Download</button>
+                                <button class="download-visual-btn flex-1 bg-green-600 text-white text-sm py-2 px-3 rounded-lg hover:bg-green-700 transition-colors" data-platform="${platform}">Download</button>
                                 <button class="use-in-ad-gen-btn flex-1 bg-blue-600 text-white text-sm py-2 px-3 rounded-lg hover:bg-blue-700 transition-colors" data-platform="${platform}" data-concept="${platformData.visual_concept || ''}">Use in Ad Generator</button>
                             </div>`;
                         campaignOutput.appendChild(card);
@@ -822,10 +902,9 @@
                         const loaderElement = document.getElementById(`loader-${platform}`);
                         const controlsElement = document.getElementById(`controls-${platform}`);
                         const downloadBtnElement = card.querySelector('.download-visual-btn');
-                        if(isTrial) downloadBtnElement.classList.add('cursor-not-allowed', 'opacity-50');
-                        else downloadBtnElement.classList.remove('cursor-not-allowed', 'opacity-50');
+                        
                         downloadBtnElement.addEventListener('click', handleDownloadVisual);
-
+    
                         if (campaignImage && campaignImage.data) {
                             imgElement.src = `data:${campaignImage.type};base64,${campaignImage.data}`;
                             imgElement.classList.remove('hidden');
@@ -841,8 +920,8 @@
                                     controlsElement.classList.remove('hidden');
                                 } else throw new Error('API returned no data.');
                             } catch(error) {
-                                 console.error(`Visual generation failed for ${platform}:`, error);
-                                 loaderElement.textContent = 'Visual generation failed.';
+                                console.error(`Visual generation failed for ${platform}:`, error);
+                                loaderElement.textContent = 'Visual generation failed.';
                             }
                         } else {
                             loaderElement.textContent = 'No visual concept.';
@@ -853,26 +932,26 @@
                     throw new Error('Failed to generate campaign data.');
                 }
             } catch (error) {
-                 campaignOutput.innerHTML = `<div class="col-span-2 text-center text-red-500">${error.message}</div>`;
+                campaignOutput.innerHTML = `<div class="col-span-2 text-center text-red-500">${error.message}</div>`;
             } finally {
                 generateCampaignBtn.disabled = false;
                 generateCampaignBtn.textContent = 'Generate Campaign';
             }
         }
-
+    
         function handleUseInAdGenerator(event) {
             const button = event.target;
             const platform = button.dataset.platform;
             const concept = button.dataset.concept;
             const imgElement = document.getElementById(`img-${platform}`);
-
+    
             if (imgElement && imgElement.src && imgElement.src.startsWith('data:image')) {
                 showAdGeneratorBtn.click();
                 backgroundPromptInput.value = concept;
                 
                 const [header, data] = imgElement.src.split(',');
                 const type = header.split(':')[1].split(';')[0];
-
+    
                 productImage = { data, type };
                 adImage.src = imgElement.src;
                 
@@ -900,7 +979,7 @@
         }
         
         function showSection(sectionToShow) {
-             [adGenerator, campaignMaker, myAdsDashboardSection, settingsSection].forEach(section => {
+            [adGenerator, campaignMaker, myAdsDashboardSection, settingsSection].forEach(section => {
                 if (section === sectionToShow) {
                     section.classList.remove('hidden');
                 } else {
@@ -908,12 +987,17 @@
                 }
             });
         }
-
-
-        window.addEventListener('load', () => {
+    
+    
+        window.addEventListener('load', async () => {
             setupFileUpload();
-            apiKeyInput.value = getApiKey() || '';
-
+            
+            const savedKey = await getApiKey();
+            if (savedKey) {
+                apiKeyInput.value = savedKey;
+                showMessageBox("Your API key has been loaded!");
+            }
+    
             // Event Listeners
             generateAdBtn.addEventListener('click', handleGenerateAd);
             resetBtn.addEventListener('click', handleReset);
@@ -923,7 +1007,7 @@
             launchToMetaBtn.addEventListener('click', openMetaConnectModal);
             clearDashboardBtn.addEventListener('click', clearDashboard);
             
-             copyAdBtn.addEventListener('click', () => {
+            copyAdBtn.addEventListener('click', () => {
                 navigator.clipboard.writeText(adCopyText.textContent)
                     .then(() => showMessageBox('Ad copy copied to clipboard!'))
                     .catch(err => showMessageBox('Failed to copy text.', true));
@@ -938,116 +1022,43 @@
                 handleLaunchToMeta(metaId);
             });
             
-            saveApiKeyBtn.addEventListener('click', () => {
+            saveApiKeyBtn.addEventListener('click', async () => {
                 const key = apiKeyInput.value.trim();
                 if (key) {
-                    localStorage.setItem('geminiApiKey', key);
-                    showMessageBox('API Key saved successfully!');
-                    showAdGeneratorBtn.click();
+                    await saveApiKey(key);
                 } else {
                     showMessageBox('Please enter a valid API key.', true);
                 }
             });
-
-            if (isTrial) {
-                downloadBtn.classList.add('cursor-not-allowed', 'opacity-50');
-            }
-
+    
             showAdGeneratorBtn.addEventListener('click', () => {
                 showSection(adGenerator);
                 setActiveButton(showAdGeneratorBtn);
             });
-
+    
             showCampaignMakerBtn.addEventListener('click', () => {
                 showSection(campaignMaker);
                 setActiveButton(showCampaignMakerBtn);
             });
-
+    
             showDashboardBtn.addEventListener('click', () => {
                 showSection(myAdsDashboardSection);
                 setActiveButton(showDashboardBtn);
                 loadAdsToDashboard();
             });
             
-            showSettingsBtn.addEventListener('click', () => {
+            showSettingsBtn.addEventListener('click', async () => {
                 showSection(settingsSection);
                 setActiveButton(showSettingsBtn);
+                const currentKey = await getApiKey();
+                apiKeyInput.value = currentKey || '';
             });
-
+    
             addNewAdCard.addEventListener('click', () => showAdGeneratorBtn.click());
             addNewAdBtn.addEventListener('click', () => showAdGeneratorBtn.click());
-
-            signupForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const email = document.getElementById('signupEmail').value;
-                if(email) {
-                    isTrial = false; 
-                    closeSignupModal();
-                    showMessageBox(`Welcome! Your free trial for ${email} is active. You can now download and launch ads.`);
-                    downloadBtn.classList.remove('cursor-not-allowed', 'opacity-50');
-                    document.querySelectorAll('.download-visual-btn').forEach(btn => btn.classList.remove('cursor-not-allowed', 'opacity-50'));
-                } else {
-                    showMessageBox('Please enter a valid email.', true);
-                }
-            });
-            
-             // PayPal Logic
-            let selectedPlan = {};
-            document.querySelectorAll('.pay-btn').forEach(button => {
-                button.addEventListener('click', (event) => {
-                    if (isTrial) {
-                        showMessageBox('Please create a free account first!', true);
-                        openSignupModal();
-                        return;
-                    }
-                    selectedPlan.name = event.target.dataset.plan;
-                    selectedPlan.price = event.target.dataset.price;
-
-                    document.getElementById('paypal-button-container').innerHTML = '';
-                    
-                    if (window.paypal) {
-                         window.paypal.Buttons({
-                            createOrder: (data, actions) => {
-                                return actions.order.create({
-                                    purchase_units: [{
-                                        description: `Soul Tribe Ad Generator - ${selectedPlan.name} Plan`,
-                                        amount: {
-                                            value: selectedPlan.price
-                                        }
-                                    }]
-                                });
-                            },
-                            onApprove: async (data, actions) => {
-                                const order = await actions.order.capture();
-                                console.log('Capture result', order, JSON.stringify(order, null, 2));
-                                document.getElementById('payment-success-message').textContent = `Payment for ${selectedPlan.name} plan successful!`;
-                                document.getElementById('payment-success-message').classList.remove('hidden');
-                                document.getElementById('paypal-button-container').innerHTML = '';
-                                
-                                document.querySelectorAll('.pay-btn').forEach(btn => {
-                                    if(btn.dataset.plan === selectedPlan.name) {
-                                        btn.textContent = 'Current Plan';
-                                        btn.disabled = true;
-                                        btn.classList.add('bg-gray-500');
-                                    } else {
-                                        btn.disabled = true;
-                                        btn.classList.add('opacity-50', 'cursor-not-allowed');
-                                    }
-                                });
-                            },
-                            onError: (err) => {
-                                console.error('An error occurred with your payment:', err);
-                                showMessageBox('An error occurred with your payment.', true);
-                            }
-                        }).render('#paypal-button-container');
-                    } else {
-                         console.error('PayPal SDK not loaded.');
-                         showMessageBox('PayPal is not available. Please try again later.', true);
-                    }
-                });
-            });
         });
     </script>
 </body>
 </html>
+
 
