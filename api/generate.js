@@ -1,74 +1,79 @@
-// Vercel Serverless Function - PITCH MODE ENABLED (Simplified)
+// Vercel Serverless Function to handle API calls - LIVE MODE
 
-const PITCH_MODE = true; 
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// --- FAKE DEMO DATA (No large Base64 string) ---
-const demoData = {
-    productAnalysis: {
-        candidates: [{
-            content: { parts: [{ text: "a premium botanical skincare serum in a sleek bottle" }] }
-        }]
-    },
-    adCopy: {
-        candidates: [{
-            content: { parts: [{ text: "Headline: The Fusion of Nature & Science.\nBody: A fusion of nature's finest ingredients and scientific innovation for skin that feels as good as it looks. Experience the botanical brilliance." }] }
-        }]
-    },
-    campaignText: {
-        candidates: [{
-            content: {
-                parts: [{
-                    text: JSON.stringify([
-                        {
-                            platform_name: "Facebook",
-                            headline: "Unlock Your Natural Glow! ✨",
-                            ad_copy: "Discover the secret to radiant skin with our new Botanical Serum. Made with scientifically-proven natural extracts to nourish and revitalize. Your skin deserves the best!",
-                            visual_concept: "A sleek bottle of the serum resting on a bed of fresh green leaves and delicate flowers, with soft morning light filtering through.",
-                            call_to_action: "Shop Now & Glow Up"
-                        },
-                        {
-                            platform_name: "Instagram",
-                            headline: "Science Meets Nature.",
-                            ad_copy: "Purely botanical. Powerfully scientific. Our new serum is here to transform your skincare routine. Get ready for visible results. #BotanicalBeauty #ScienceOfSkin",
-                            visual_concept: "A minimalist flat-lay of the product next to a glass beaker containing a single green leaf. Clean, white marble background.",
-                            call_to_action: "Tap to Shop"
-                        }
-                    ])
-                }]
-            }
-        }]
-    },
-    // The backend now returns a special string "USE_DEMO_IMAGE" instead of Base64 data.
-    adImageComposite: {
-        candidates: [{
-            content: { parts: [{ text: "USE_DEMO_IMAGE" }] }
-        }]
-    },
-    campaignVisual: {
-        predictions: [{ text: "USE_DEMO_IMAGE" }]
-    }
-};
+// --- CONFIGURATION ---
+// IMPORTANT: You MUST set your GEMINI_API_KEY in your Vercel project's Environment Variables.
+const API_KEY = process.env.GEMINI_API_KEY;
+
+if (!API_KEY) {
+    console.error("FATAL ERROR: GEMINI_API_KEY environment variable is not set.");
+}
+
+const genAI = new GoogleGenerativeAI(API_KEY);
+
+// Define the models to be used for different tasks
+const textModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash-preview-0520" });
+const visionModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash-preview-0520" });
+const imageModel = genAI.getGenerativeModel({ model: "imagen-3.0-generate-preview-0611"});
+
 
 // --- MAIN HANDLER ---
+// This is the main function Vercel will run.
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
-    if (!PITCH_MODE) {
-        return res.status(503).json({ error: 'Live API is disabled.' });
+    if (!API_KEY) {
+        return res.status(500).json({ error: 'Server configuration error: API key not found.' });
     }
 
     try {
-        const { type } = req.body;
-        if (!type || !demoData[type]) {
-            return res.status(400).json({ error: `Bad Request: Invalid type in Pitch Mode: ${type}` });
+        const { type, payload } = req.body;
+        console.log(`Received request for type: ${type}`);
+
+        let result;
+
+        switch (type) {
+            case 'productAnalysis':
+            case 'adImageComposite': // Handled by the same vision model
+                result = await visionModel.generateContent(payload.contents);
+                break;
+
+            case 'adCopy':
+            case 'campaignText': // Handled by the same text model
+                result = await textModel.generateContent(payload.contents, payload.generationConfig);
+                break;
+            
+            case 'campaignVisual':
+                // Note: The Imagen model uses a different method signature
+                const imageResponse = await imageModel.generateContent(payload.prompt);
+                // We need to structure the response to be consistent for the frontend.
+                // This is a mock structure to match what the other models return.
+                // The actual image data is typically handled differently (e.g., streaming or direct bytes),
+                // but for this client-side setup, we'll assume a parsable format is intended.
+                // This part might need adjustment based on the exact client-side expectation
+                // For now, we'll simulate a similar response structure.
+                // A real implementation would process imageResponse differently.
+                 result = { predictions: [ { bytesBase64Encoded: imageResponse.response.candidates[0].content.parts[0].inlineData.data }] };
+                break;
+
+            default:
+                return res.status(400).json({ error: `Invalid API call type: ${type}` });
         }
-        await new Promise(resolve => setTimeout(resolve, 500)); 
-        return res.status(200).json(demoData[type]);
+        
+        console.log(`Successfully processed request for type: ${type}`);
+        return res.status(200).json(result.response ? result.response : result);
+
     } catch (error) {
-        console.error('Pitch Mode Error:', error);
-        return res.status(500).json({ error: 'An error occurred in Pitch Mode.' });
+        console.error(`Error processing API request:`, error);
+        // Provide a more detailed error message back to the client if possible
+        const errorMessage = error.response ? JSON.stringify(error.response.data) : error.message;
+        return res.status(500).json({ 
+            error: `An error occurred while processing your request.`,
+            details: errorMessage
+        });
     }
 }
 
