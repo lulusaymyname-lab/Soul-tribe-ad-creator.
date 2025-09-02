@@ -1,1063 +1,622 @@
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ad & Campaign Creator</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #0b0b15;
-            color: #fff;
-            margin: 0;
-        }
-        .loading-overlay {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .ad-preview-image {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-        .select2-container--default .select2-selection--multiple {
-            border-radius: 0.75rem;
-            border: 2px solid #e5e7eb;
-            padding: 0.5rem;
-        }
-        .select2-container--default .select2-selection--multiple .select2-selection__choice {
-            background-color: #4f46e5;
-            color: white;
-            border: none;
-            border-radius: 0.5rem;
-        }
-        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
-            color: white;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6);
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
-        .modal.active {
-            display: flex;
-        }
-        
-        /* Scroller Styles */
-        .scroller {
-            max-width: 100%;
-            overflow: hidden;
-            -webkit-mask: linear-gradient(90deg, transparent, white 20%, white 80%, transparent);
-            mask: linear-gradient(90deg, transparent, white 20%, white 80%, transparent);
-        }
-        .scroller__inner {
-            display: flex;
-            gap: 1rem;
-            padding-block: 1rem;
-            width: max-content;
-            animation: scroll 60s linear infinite;
-        }
-        .scroller__inner img {
-            height: 180px; /* Small height as requested */
-            width: auto;
-            border-radius: 0.75rem;
-            object-fit: cover;
-        }
-        .scroller:hover .scroller__inner {
-            animation-play-state: paused;
-        }
-        @keyframes scroll {
-            to {
-                transform: translate(calc(-50% - 0.5rem)); /* -50% for duplicated content, -0.5rem for half the gap */
-            }
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ad & Campaign Creator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+        <script src="https://www.paypal.com/sdk/js?client-id=AQRSVj2hhAqWy7TCjAWRB4mxj5Y3B87JdMGtBUIGCEKMFMWLvep2pRGDGyjTebgI2N760RB1jUrsmZGW&currency=USD"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0b0b15;
+            color: #fff;
+            margin: 0;
+        }
+        .loading-overlay {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .ad-preview-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .select2-container--default .select2-selection--multiple {
+            background-color: #1f2937;
+            border-radius: 0.75rem;
+            border: 2px solid #4b5563;
+            padding: 0.5rem;
+        }
+         .select2-container--default .select2-selection--multiple .select2-selection__rendered { color: #fff; }
+        .select2-container--default .select2-selection--multiple .select2-selection__choice {
+            background-color: #4f46e5; color: white; border: none; border-radius: 0.5rem;
+        }
+        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove { color: white; }
+         .select2-dropdown { background-color: #1f2937; border: 1px solid #4b5563; }
+        .select2-container--default .select2-results__option--highlighted[aria-selected] { background-color: #4f46e5; }
+         .select2-results__option { color: #d1d5db; }
+        .modal {
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; background: rgba(0,0,0,0.6);
+            justify-content: center; align-items: center; z-index: 100;
+        }
+        .modal.active { display: flex; }
+        .scroller {
+            max-width: 100%; overflow: hidden;
+            -webkit-mask: linear-gradient(90deg, transparent, white 20%, white 80%, transparent);
+            mask: linear-gradient(90deg, transparent, white 20%, white 80%, transparent);
+        }
+        .scroller__inner {
+            display: flex; gap: 1rem; padding-block: 1rem; width: max-content;
+            animation: scroll 60s linear infinite;
+        }
+        .scroller__inner img {
+            height: 180px; width: auto; border-radius: 0.75rem; object-fit: cover;
+        }
+        .scroller:hover .scroller__inner { animation-play-state: paused; }
+        @keyframes scroll { to { transform: translate(calc(-50% - 0.5rem)); } }
+    </style>
 </head>
 <body class="bg-gray-900 text-white">
 
-    <!-- =================================================================== -->
-    <!-- Main Landing Page UI                                                -->
-    <!-- =================================================================== -->
-    <div id="landingPage">
-        <!-- Hero Section -->
-        <header class="text-center py-12 px-5 bg-gradient-to-b from-[#1b1b2f] to-[#0b0b15]">
-            <h1 class="text-4xl font-bold mb-2">Soul Tribe Ad & Campaign Generator</h1>
-            <p class="text-gray-300 text-lg">Create scroll-stopping ads in seconds with AI-powered design</p>
-            <a href="#appSections" class="mt-6 inline-block bg-pink-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:bg-pink-700 transition">
-                🚀 Try Now (Test Drive)
-            </a>
-        </header>
+    <div id="landingPage">
+        <header class="text-center py-12 px-5 bg-gradient-to-b from-[#1b1b2f] to-[#0b0b15]">
+            <h1 class="text-4xl font-bold mb-2">Soul Tribe Ad & Campaign Generator</h1>
+            <p class="text-gray-300 text-lg">Create scroll-stopping ads in seconds with AI-powered design</p>
+            <a href="#appSections" class="mt-6 inline-block bg-pink-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:bg-pink-700 transition">
+                Try Now (Test Drive)
+            </a>
+        </header>
 
-        <!-- What You Can Create Section (Scroller) -->
-        <section class="py-16 px-6 max-w-7xl mx-auto">
-            <h2 class="text-3xl font-bold text-center mb-4">What You Can Create</h2>
-            <p class="text-center text-lg text-gray-400 mb-12 max-w-3xl mx-auto">
-                Here are real examples generated by the Soul Tribe Ad & Campaign Generator. 
-                In just seconds, you can create professional, ready-to-post ads for Instagram, Facebook, X, and Pinterest — 
-                tailored to your product or campaign.
-            </p>
+        <section class="py-16 px-6 max-w-7xl mx-auto">
+            <h2 class="text-3xl font-bold text-center mb-4">What You Can Create</h2>
+            <p class="text-center text-lg text-gray-400 mb-12 max-w-3xl mx-auto">
+                Here are real examples generated by the Soul Tribe Ad & Campaign Generator.
+                In just seconds, you can create professional, ready-to-post ads for Instagram, Facebook, X, and Pinterest —
+                tailored to your product or campaign.
+            </p>
+            <div class="scroller" data-speed="slow"><div class="scroller__inner"></div></div>
+        </section>
 
-            <div class="scroller" data-speed="slow">
-                <div class="scroller__inner">
-                    <!-- Images will be injected here by JS -->
-                </div>
-            </div>
-        </section>
+        <section class="py-16 px-6 max-w-7xl mx-auto">
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-gray-800 rounded-2xl p-8 border border-gray-700 flex flex-col h-full">
+                    <div class="flex-grow"><div class="w-12 h-12 bg-indigo-600/20 rounded-full flex items-center justify-center mb-4"><svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg></div><h3 class="text-2xl font-bold mb-2">Launch Ads Directly to Meta</h3><p class="text-gray-400 mb-6">Now, with just a single click, you can launch ads directly from Projects to Meta, saving time and simplifying the process.</p></div><img src="https://i.imgur.com/RzmcLQd.png" alt="Ad example for Meta launch" class="rounded-xl object-cover w-full h-64 mt-auto"></div>
+                <div class="bg-gray-800 rounded-2xl p-8 border border-gray-700 flex flex-col h-full">
+                    <div class="flex-grow"><div class="w-12 h-12 bg-pink-600/20 rounded-full flex items-center justify-center mb-4"><svg class="w-6 h-6 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg></div><h3 class="text-2xl font-bold mb-2">Monitor Ad Performance & Health</h3><p class="text-gray-400 mb-6">Easily monitor ad performance with the new Ad Level View in My Ads. Track key metrics, adjust ad status, and check ad health—all in one place.</p></div><img src="https://i.imgur.com/7xL8pXD.png" alt="Ad performance dashboard" class="rounded-xl object-cover w-full h-64 mt-auto"></div>
+            </div>
+        </section>
 
-        <!-- New Features Section -->
-        <section class="py-16 px-6 max-w-7xl mx-auto">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <!-- Card 1: Launch Ads -->
-                <div class="bg-gray-800 rounded-2xl p-8 border border-gray-700 flex flex-col h-full">
-                    <div class="flex-grow">
-                        <div class="w-12 h-12 bg-indigo-600/20 rounded-full flex items-center justify-center mb-4">
-                            <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                        </div>
-                        <h3 class="text-2xl font-bold mb-2">Launch Ads Directly to Meta</h3>
-                        <p class="text-gray-400 mb-6">Now, with just a single click, you can launch ads directly from Projects to Meta, saving time and simplifying the process.</p>
-                    </div>
-                    <img src="https://i.imgur.com/RzmcLQd.png" alt="Ad example for Meta launch" class="rounded-xl object-cover w-full h-64 mt-auto">
-                </div>
-                <!-- Card 2: Monitor Performance -->
-                <div class="bg-gray-800 rounded-2xl p-8 border border-gray-700 flex flex-col h-full">
-                    <div class="flex-grow">
-                        <div class="w-12 h-12 bg-pink-600/20 rounded-full flex items-center justify-center mb-4">
-                           <svg class="w-6 h-6 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                        </div>
-                        <h3 class="text-2xl font-bold mb-2">Monitor Ad Performance & Health</h3>
-                        <p class="text-gray-400 mb-6">Easily monitor ad performance with the new Ad Level View in My Ads. Track key metrics, adjust ad status, and check ad health—all in one place.</p>
-                    </div>
-                    <img src="https://i.imgur.com/7xL8pXD.png" alt="Ad performance dashboard" class="rounded-xl object-cover w-full h-64 mt-auto">
-                </div>
-            </div>
-        </section>
+        <section class="bg-[#1b1b2f] py-16 px-6">
+            <h2 class="text-3xl font-bold text-center mb-10">See the Magic: Before & After</h2>
+            <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-center text-center md:text-left">
+                <div><img src="https://i.imgur.com/Sn3IZyz.png" alt="Before: Raw product shot" class="rounded-xl shadow-lg border border-gray-700 mx-auto"><p class="mt-4 text-gray-400">Before: A standard product image.</p></div>
+                <div class="relative"><img src="https://i.imgur.com/RzmcLQd.png" alt="After: AI-generated ad" class="rounded-xl shadow-lg border border-pink-500 mx-auto"><p class="mt-4 text-gray-400">After: A professional, AI-generated ad.</p><div class="absolute inset-0 bg-white/10 rounded-xl"></div></div>
+                <div><img src="https://i.imgur.com/sbKrFep.png" alt="Before: Raw product shot" class="rounded-xl shadow-lg border border-gray-700 mx-auto"><p class="mt-4 text-gray-400">Before: A standard product image.</p></div>
+                <div class="relative"><img src="https://i.imgur.com/PvoIuCN.png" alt="After: AI-generated ad" class="rounded-xl shadow-lg border border-pink-500 mx-auto"><p class="mt-4 text-gray-400">After: A professional, AI-generated ad.</p><div class="absolute inset-0 bg-white/10 rounded-xl"></div></div>
+            </div>
+        </section>
 
-        <!-- Before & After Section -->
-        <section class="bg-[#1b1b2f] py-16 px-6">
-            <h2 class="text-3xl font-bold text-center mb-10">See the Magic: Before & After</h2>
-            <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-center text-center md:text-left">
-                <div>
-                    <img src="https://i.imgur.com/NXeFCWd.png" alt="Before: Raw product shot" class="rounded-xl shadow-lg border border-gray-700 mx-auto">
-                    <p class="mt-4 text-gray-400">Before: A standard product image.</p>
-                </div>
-                <div class="relative">
-                    <img src="https://i.imgur.com/sbKrFep.png" alt="After: AI-generated ad" class="rounded-xl shadow-lg border border-pink-500 mx-auto">
-                    <p class="mt-4 text-gray-400">After: A professional, AI-generated ad.</p>
-                    <div class="absolute inset-0 bg-white/10 rounded-xl"></div>
-                </div>
-            </div>
-        </section>
+        <div id="appSections" class="py-16 px-6">
+            <div class="flex justify-center space-x-4 mb-10">
+                <button id="showAdGeneratorBtn" class="bg-indigo-600 text-white font-bold py-2 px-6 rounded-xl transition-colors">Ad Generator</button>
+                <button id="showCampaignMakerBtn" class="bg-gray-800 text-white font-bold py-2 px-6 rounded-xl transition-colors">Campaign Maker</button>
+                <button id="showDashboardBtn" class="bg-gray-800 text-white font-bold py-2 px-6 rounded-xl transition-colors">My Ads Dashboard</button>
+            </div>
 
-        <!-- Ad Generator and Campaign Maker Sections -->
-        <div id="appSections" class="py-16 px-6">
-            <!-- App Toggle Buttons -->
-            <div class="flex justify-center space-x-4 mb-10">
-                <button id="showAdGeneratorBtn" class="bg-indigo-600 text-white font-bold py-2 px-6 rounded-xl transition-colors">Ad Generator</button>
-                <button id="showCampaignMakerBtn" class="bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-xl transition-colors">Campaign Maker</button>
-                <button id="showDashboardBtn" class="bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-xl transition-colors">My Ads Dashboard</button>
-                <button id="showSettingsBtn" class="bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-xl transition-colors">Settings</button>
-            </div>
+            <div id="adGenerator" class="flex flex-col lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6">
+                <div class="flex-1 flex flex-col space-y-6">
+                    <div class="p-6 bg-gray-800 rounded-2xl border border-gray-700 shadow-sm"><h2 class="text-2xl font-bold text-white mb-4">Generate Ad</h2><p class="text-sm text-gray-400 mb-4">Describe the background, product placement, and ad copy style.</p><div class="bg-gray-700 text-white p-3 rounded-xl mb-4 text-sm border border-gray-600"><p><strong>Heads up!</strong> AI generation can be creative. You may need to run the generation process a few times. Be as specific as possible!</p></div><textarea id="backgroundPrompt" class="w-full h-24 p-3 text-base bg-gray-900 text-white border-2 border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500" placeholder="A sleek marble podium..."></textarea><label id="uploadLabel" class="cursor-pointer mt-4 w-full text-gray-200 font-bold py-3 px-6 rounded-xl shadow-md text-center bg-gray-700 hover:bg-gray-600 block transition-colors">Upload Product Image<input type="file" id="productImageUpload" accept="image/*" class="hidden" /></label><button id="generateAdBtn" class="mt-4 w-full bg-indigo-600 text-white font-bold py-4 px-8 rounded-xl hover:bg-indigo-700 transition-colors">Generate Ad</button></div>
+                    <div id="adCopyContainer" class="p-6 bg-gray-800 rounded-2xl border border-gray-700 hidden"><h3 class="text-xl font-bold mb-2">Generated Ad Copy:</h3><div id="adCopyText" class="text-gray-300"></div><button id="copyAdBtn" class="mt-4 w-full bg-gray-700 text-white font-bold py-3 px-6 rounded-xl hover:bg-gray-600 transition-colors">Copy Ad Text</button></div>
+                    <button id="resetBtn" class="w-full bg-red-500 text-white font-bold py-3 px-6 rounded-xl hover:bg-red-600 transition-colors">Reset</button>
+                </div>
+                <div class="flex-1 flex flex-col items-center justify-center space-y-4">
+                    <div class="relative w-full aspect-[1/1] overflow-hidden rounded-xl shadow-2xl border border-gray-700"><img id="adImage" class="ad-preview-image" /><div id="overlay" class="absolute inset-0 bg-gray-800/80 backdrop-blur-sm loading-overlay text-center p-4"><p id="overlayText" class="text-xl text-gray-300">Enter a prompt and upload an image.</p></div></div>
+                    <div id="canvasControls" class="w-full hidden"><button id="downloadBtn" class="w-full bg-green-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-green-700 transition-colors">Download Your Ad</button></div>
+                    <div id="launchToMetaContainer" class="w-full hidden mt-4"><h3 class="text-lg font-semibold text-center mb-2">Ready to Launch?</h3><button id="launchToMetaBtn" class="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-blue-700 transition-colors">Launch on Facebook & Instagram</button></div>
+                </div>
+            </div>
 
-            <!-- Ad Generator Section -->
-            <div id="adGenerator" class="flex flex-col lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6">
-                <div class="flex-1 flex flex-col space-y-6">
-                    <div class="p-6 bg-gray-800 rounded-2xl border border-gray-700 shadow-sm">
-                        <h2 class="text-2xl font-bold text-white mb-4">Generate Ad</h2>
-                        <p class="text-sm text-gray-400 mb-4">Describe the background, product placement, and ad copy style.</p>
-                        <!-- New Disclaimer -->
-                        <div class="bg-gray-700 text-white p-3 rounded-xl mb-4 text-sm border border-gray-600">
-                          <p>
-                            <strong>Heads up!</strong> AI generation can be creative. You may need to run the generation process a few times with different prompts to get your desired result. Be as specific as possible!
-                          </p>
-                        </div>
-                        <textarea id="backgroundPrompt" class="w-full h-24 p-3 text-base text-gray-900 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500" placeholder="A sleek marble podium..."></textarea>
-                        <div id="uploadContainer">
-                            <label id="uploadLabel" class="cursor-pointer mt-4 w-full text-gray-200 font-bold py-3 px-6 rounded-xl shadow-md text-center bg-gray-700 hover:bg-gray-600 block transition-colors">
-                                Upload Product Image
-                                <input type="file" id="productImageUpload" accept="image/*" class="hidden" />
-                            </label>
-                        </div>
-                        <button id="generateAdBtn" class="mt-4 w-full bg-indigo-600 text-white font-bold py-4 px-8 rounded-xl hover:bg-indigo-700 transition-colors">Generate Ad</button>
-                    </div>
-                    <div id="adCopyContainer" class="p-6 bg-gray-800 rounded-2xl border border-gray-700 hidden">
-                        <h3 class="text-xl font-bold mb-2">Generated Ad Copy:</h3>
-                        <div id="adCopyText" class="text-gray-300"></div>
-                        <button id="copyAdBtn" class="mt-4 w-full bg-gray-700 text-white font-bold py-3 px-6 rounded-xl hover:bg-gray-600 transition-colors">Copy Ad Text</button>
-                    </div>
-                    <button id="resetBtn" class="w-full bg-red-500 text-white font-bold py-3 px-6 rounded-xl hover:bg-red-600 transition-colors">Reset</button>
-                </div>
-                <div class="flex-1 flex flex-col items-center justify-center space-y-4">
-                    <div class="relative w-full aspect-[1/1] overflow-hidden rounded-xl shadow-2xl border border-gray-700">
-                        <img id="adImage" class="ad-preview-image" />
-                        <div id="overlay" class="absolute inset-0 bg-white/70 loading-overlay text-center p-4"><p id="overlayText" class="text-xl text-gray-500">Enter a prompt and upload an image.</p></div>
-                    </div>
-                    <div id="canvasControls" class="w-full hidden">
-                        <button id="downloadBtn" class="w-full bg-green-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-green-700 transition-colors">Download Your Ad</button>
-                    </div>
-                    <div id="launchToMetaContainer" class="w-full hidden mt-4">
-                        <h3 class="text-lg font-semibold text-center mb-2">Ready to Launch?</h3>
-                        <button id="launchToMetaBtn" class="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-blue-700 transition-colors">
-                            🚀 Launch on Facebook & Instagram
-                        </button>
-                    </div>
-                </div>
-            </div>
+            <div id="campaignMaker" class="hidden">
+                 <div class="p-6 bg-gray-800 rounded-2xl border border-gray-700 shadow-sm"><h2 class="text-2xl font-bold text-white mb-4">Create a Campaign</h2><p class="text-sm text-gray-400 mb-4">Generate copy and visual concepts for multiple platforms at once.</p><div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"><input type="text" id="productName" class="w-full p-3 text-base bg-gray-900 text-white border-2 border-gray-600 rounded-xl" placeholder="Enter Product Name or Type"><select id="platforms" multiple="multiple" class="w-full"><option value="facebook">Facebook</option><option value="instagram">Instagram</option><option value="pinterest">Pinterest</option><option value="x">X (Twitter)</option></select></div><label id="campaignUploadLabel" class="cursor-pointer w-full text-gray-200 font-bold py-3 px-6 rounded-xl shadow-md text-center bg-gray-700 hover:bg-gray-600 block transition-colors">(Optional) Upload Product Image<input type="file" id="campaignImageUpload" accept="image/*" class="hidden" /></label><button id="generateCampaignBtn" class="mt-4 w-full bg-indigo-600 text-white font-bold py-4 px-8 rounded-xl hover:bg-indigo-700 transition-colors">Generate Campaign</button></div>
+                 <div id="campaignOutput" class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+            </div>
 
-            <!-- Campaign Maker Section -->
-            <div id="campaignMaker" class="hidden">
-                 <div class="p-6 bg-gray-800 rounded-2xl border border-gray-700 shadow-sm">
-                     <h2 class="text-2xl font-bold text-white mb-4">Create a Campaign</h2>
-                     <p class="text-sm text-gray-400 mb-4">Generate copy and visual concepts for multiple platforms at once.</p>
-                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                         <input type="text" id="productName" class="w-full p-3 text-base text-gray-900 border-2 border-gray-200 rounded-xl" placeholder="Enter Product Name or Type">
-                         <select id="platforms" multiple="multiple" class="w-full"><option value="facebook">Facebook</option><option value="instagram">Instagram</option><option value="pinterest">Pinterest</option><option value="x">X (Twitter)</option></select>
-                     </div>
-                      <label id="campaignUploadLabel" class="cursor-pointer w-full text-gray-200 font-bold py-3 px-6 rounded-xl shadow-md text-center bg-gray-700 hover:bg-gray-600 block transition-colors">
-                          (Optional) Upload Product Image
-                          <input type="file" id="campaignImageUpload" accept="image/*" class="hidden" />
-                      </label>
-                      <button id="generateCampaignBtn" class="mt-4 w-full bg-indigo-600 text-white font-bold py-4 px-8 rounded-xl hover:bg-indigo-700 transition-colors">Generate Campaign</button>
-                 </div>
-                 <div id="campaignOutput" class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6"></div>
-            </div>
+            <div id="myAdsDashboardSection" class="hidden">
+                 <div class="flex flex-wrap justify-between items-center mb-10 gap-4"><h2 class="text-3xl font-bold">My Ads Dashboard</h2><button id="addNewAdBtn" class="bg-indigo-600 text-white font-bold py-2 px-6 rounded-xl transition-colors hover:bg-indigo-700">Create New Ad</button></div>
+                 <div class="max-w-7xl mx-auto"><div id="adsDashboardGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"><div class="bg-gray-800 rounded-2xl border border-gray-700 overflow-hidden"><img src="https://i.imgur.com/RzmcLQd.png" alt="Ad Preview" class="w-full h-64 object-cover"><div class="p-6"><h3 class="font-semibold text-white mb-2">"Bomber Jacket" Ad</h3><p class="text-sm text-gray-400 mb-4">Status: <span class="font-semibold text-green-400">Active</span></p><div class="grid grid-cols-3 gap-4 text-center"><div><p class="text-xs text-gray-400">Reach</p><p class="text-lg font-bold text-white">12.5K</p></div><div><p class="text-xs text-gray-400">Clicks</p><p class="text-lg font-bold text-white">1.2K</p></div><div><p class="text-xs text-gray-400">CTR</p><p class="text-lg font-bold text-white">9.6%</p></div></div><button class="mt-4 w-full bg-gray-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors">View Performance</button></div></div><div class="bg-gray-800 rounded-2xl border border-gray-700 overflow-hidden"><img src="https://i.imgur.com/5dUY1BS.png" alt="Ad Preview" class="w-full h-64 object-cover"><div class="p-6"><h3 class="font-semibold text-white mb-2">"Skincare Essentials" Promo</h3><p class="text-sm text-gray-400 mb-4">Status: <span class="font-semibold text-red-400">Ended</span></p><div class="grid grid-cols-3 gap-4 text-center"><div><p class="text-xs text-gray-400">Reach</p><p class="text-lg font-bold text-white">98.1K</p></div><div><p class="text-xs text-gray-400">Clicks</p><p class="text-lg font-bold text-white">9.2K</p></div><div><p class="text-xs text-gray-400">CTR</p><p class="text-lg font-bold text-white">9.4%</p></div></div><button class="mt-4 w-full bg-gray-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors">View Performance</button></div></div><div id="addNewAdCard" class="bg-gray-800 rounded-2xl border-2 border-dashed border-gray-600 flex items-center justify-center cursor-pointer hover:bg-gray-700 transition-colors min-h-[400px]"><div class="text-center text-gray-400"><svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg><p class="mt-2 font-semibold">Launch a New Ad</p></div></div></div></div>
+            </div>
+        </div>
+        
+        <section class="bg-gradient-to-r from-purple-600 to-pink-600 py-16 px-6 text-center">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="text-4xl md:text-5xl font-extrabold mb-4 leading-tight">Your First 5 Ads are on Us!</h2>
+                <p class="text-xl text-gray-100 mb-8">Sign up now for a free account and start creating professional ads instantly. No credit card required.</p>
+                <button onclick="openSignupModal()" class="inline-block bg-white text-pink-600 font-bold px-8 py-4 rounded-xl shadow-lg hover:bg-gray-200 transition-colors">Start Your Free Trial</button>
+            </div>
+        </section>
 
-            <!-- My Ads Dashboard Section -->
-            <div id="myAdsDashboardSection" class="hidden">
-                <div class="flex flex-wrap justify-between items-center mb-10 gap-4">
-                    <h2 class="text-3xl font-bold">My Ads Dashboard</h2>
-                     <div class="flex space-x-4">
-                         <button id="clearDashboardBtn" class="bg-red-600 text-white font-bold py-2 px-6 rounded-xl transition-colors hover:bg-red-700">Clear All Ads</button>
-                         <button id="addNewAdBtn" class="bg-indigo-600 text-white font-bold py-2 px-6 rounded-xl transition-colors hover:bg-indigo-700">Create New Ad</button>
-                    </div>
-                </div>
-                <div class="max-w-7xl mx-auto">
-                    <!-- Grid for launched ads -->
-                    <div id="adsDashboardGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <!-- Ads will be dynamically inserted here -->
-                        <div id="addNewAdCard" class="bg-gray-800 rounded-2xl border-2 border-dashed border-gray-600 flex items-center justify-center cursor-pointer hover:bg-gray-700 transition-colors min-h-[400px]">
-                            <div class="text-center text-gray-400">
-                                <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                                <p class="mt-2 font-semibold">Launch a New Ad</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Settings Section -->
-            <div id="settingsSection" class="hidden">
-                 <div class="p-6 bg-gray-800 rounded-2xl border border-gray-700 shadow-sm max-w-2xl mx-auto">
-                     <h2 class="text-2xl font-bold text-white mb-4">Settings</h2>
-                     <p class="text-sm text-gray-400 mb-4">
-                         To use the AI generation features on the live site, you need to provide your own Google AI API key. 
-                         You can get a free key from Google AI Studio.
-                     </p>
-                     <div class="flex flex-col space-y-4">
-                         <label for="apiKeyInput" class="font-semibold text-gray-300">Your Google AI API Key:</label>
-                         <input type="password" id="apiKeyInput" placeholder="Enter your API key" class="p-3 rounded-xl border border-gray-700 bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                         <button id="saveApiKeyBtn" class="bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition-colors">Save Key</button>
-                         <a href="https://makersuite.google.com/app/apikey" target="_blank" class="text-center text-indigo-400 hover:underline">Get your API Key here &rarr;</a>
-                     </div>
-                 </div>
-            </div>
+        <section id="pricing" class="bg-[#1b1b2f] py-16 px-6">
+            <h2 class="text-3xl font-bold text-center mb-10">Simple Pricing</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <div class="bg-[#0b0b15] p-8 rounded-2xl"><h3 class="text-2xl font-bold mb-2">Starter</h3><p class="text-4xl font-bold my-4 text-yellow-400">$19<span class="text-base font-normal text-gray-300"> / month</span></p><ul class="text-gray-400 space-y-2"><li>50 Ad downloads / mo</li><li>1 Brand Kit</li><li>Basic analytics</li></ul><div id="paypal-starter-button-container" class="mt-6"></div></div>
+                <div class="bg-[#0b0b15] p-8 rounded-2xl border-2 border-pink-500"><h3 class="text-2xl font-bold mb-2">Pro</h3><p class="text-4xl font-bold my-4 text-yellow-400">$49<span class="text-base font-normal text-gray-300"> / month</span></p><ul class="text-gray-400 space-y-2"><li>200 Ad downloads / mo</li><li>3 Brand Kits</li><li>A/B variants</li></ul><div id="paypal-pro-button-container" class="mt-6"></div></div>
+                <div class="bg-[#0b0b15] p-8 rounded-2xl"><h3 class="text-2xl font-bold mb-2">Business</h3><p class="text-4xl font-bold my-4 text-yellow-400">$99<span class="text-base font-normal text-gray-300"> / month</span></p><ul class="text-gray-400 space-y-2"><li>Unlimited downloads</li><li>5 seats included</li><li>API access</li></ul><div id="paypal-business-button-container" class="mt-6"></div></div>
+            </div>
+        </section>
+    </div>
 
-        </div>
-        
-        <!-- Limited Time Offer Section -->
-        <section class="bg-gradient-to-r from-purple-600 to-pink-600 py-16 px-6 text-center">
-            <div class="max-w-4xl mx-auto">
-                <h2 class="text-4xl md:text-5xl font-extrabold mb-4 leading-tight">Your First 10 Ads are on Us!</h2>
-                <p class="text-xl text-gray-100 mb-8">Sign up now for a free account and start creating professional ads instantly. No credit card required.</p>
-                <button onclick="openSignupModal()" class="inline-block bg-white text-pink-600 font-bold px-8 py-4 rounded-xl shadow-lg hover:bg-gray-200 transition-colors">Start Your Free Trial</button>
-            </div>
-        </section>
+        <div id="signupModal" class="modal"><div class="bg-gray-800 rounded-2xl shadow-lg max-w-sm w-full p-8 relative border border-gray-700 text-white"><button onclick="closeSignupModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl font-bold">&times;</button><h2 class="text-3xl font-extrabold text-center mb-4">Start Your Free Trial</h2><p class="text-center text-gray-400 mb-6">Enter your email to get started. No credit card needed!</p><form id="signupForm" class="flex flex-col space-y-4"><input type="email" id="signupEmail" placeholder="Enter your email" required class="p-3 rounded-xl border border-gray-700 bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-pink-500"><button type="submit" class="bg-pink-600 text-white font-bold py-3 rounded-xl hover:bg-pink-700 transition-colors">Start Free Trial</button></form></div></div>
+    <div id="metaConnectModal" class="modal"><div class="bg-gray-800 rounded-2xl shadow-lg max-w-sm w-full p-8 relative border border-gray-700 text-white"><button onclick="closeMetaConnectModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl font-bold">&times;</button><h2 class="text-3xl font-extrabold text-center mb-4">Connect to Meta Ads</h2><p class="text-center text-gray-400 mb-6">Please enter your Meta Ad Account ID to launch your campaign.</p><div class="flex flex-col space-y-4"><input type="text" id="metaAdAccountId" placeholder="Enter your Meta Ad Account ID" required class="p-3 rounded-xl border border-gray-700 bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"><button id="connectAndLaunchBtn" class="bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors">Connect & Launch</button></div></div></div>
 
-        <!-- Pricing Section -->
-        <section class="bg-[#1b1b2f] py-16 px-6">
-            <h2 class="text-3xl font-bold text-center mb-10">Simple Pricing</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-                <div class="bg-[#0b0b15] p-8 rounded-2xl">
-                    <h3 class="text-2xl font-bold mb-2">Starter</h3>
-                    <p class="text-4xl font-bold my-4 text-yellow-400">$19<span class="text-base font-normal text-gray-300"> / month</span></p>
-                    <p class="text-gray-400">50 Ad downloads / mo<br>1 Brand Kit<br>Basic analytics</p>
-                    <button class="mt-6 bg-pink-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-pink-700 pay-btn" data-plan="Starter" data-price="19">Pay with Card / PayPal</button>
-                </div>
-                <div class="bg-[#0b0b15] p-8 rounded-2xl border-2 border-pink-500">
-                    <h3 class="text-2xl font-bold mb-2">Pro</h3>
-                    <p class="text-4xl font-bold my-4 text-yellow-400">$49<span class="text-base font-normal text-gray-300"> / month</span></p>
-                    <p class="text-gray-400">200 Ad downloads / mo<br>3 Brand Kits<br>A/B variants</p>
-                    <button class="mt-6 bg-pink-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-pink-700 pay-btn" data-plan="Pro" data-price="49">Pay with Card / PayPal</button>
-                </div>
-                <div class="bg-[#0b0b15] p-8 rounded-2xl">
-                    <h3 class="text-2xl font-bold mb-2">Business</h3>
-                    <p class="text-4xl font-bold my-4 text-yellow-400">$99<span class="text-base font-normal text-gray-300"> / month</span></p>
-                    <p class="text-gray-400">Unlimited downloads<br>5 seats included<br>API access</p>
-                    <button class="mt-6 bg-pink-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-pink-700 pay-btn" data-plan="Business" data-price="99">Pay with Card / PayPal</button>
-                </div>
-            </div>
-             <div id="paypal-button-container" class="max-w-sm mx-auto mt-8"></div>
-             <p id="payment-success-message" class="text-center text-green-400 font-semibold mt-4 hidden"></p>
-        </section>
-    </div>
+    <div id="messageBox" class="fixed inset-x-0 top-4 mx-auto p-4 bg-green-500 text-white rounded-lg shadow-lg text-center z-50 transform -translate-y-full opacity-0 max-w-md"></div>
 
-    <!-- Sign-up Modal -->
-    <div id="signupModal" class="modal">
-        <div class="bg-gray-800 rounded-2xl shadow-lg max-w-sm w-full p-8 relative border border-gray-700 text-white">
-            <button onclick="closeSignupModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl font-bold">&times;</button>
-            <h2 class="text-3xl font-extrabold text-center mb-4">Start Your Free Trial</h2>
-            <p class="text-center text-gray-400 mb-6">Enter your email to get started. No credit card needed!</p>
-            <form id="signupForm" class="flex flex-col space-y-4">
-                <input type="email" id="signupEmail" placeholder="Enter your email" required class="p-3 rounded-xl border border-gray-700 bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-pink-500">
-                <button type="submit" class="bg-pink-600 text-white font-bold py-3 rounded-xl hover:bg-pink-700 transition-colors">Start Free Trial</button>
-            </form>
-        </div>
-    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        // --- App State & Config ---
+        let isTrial = true;
+        let trialDownloads = 0;
+        const TRIAL_DOWNLOAD_LIMIT = 5;
+        const SECURE_API_ENDPOINT = 'https://campaign-generator-mpnygq511-luchille-brown-s-projects.vercel.app/api/generate';
 
-    <!-- Meta Connect Modal -->
-    <div id="metaConnectModal" class="modal">
-        <div class="bg-gray-800 rounded-2xl shadow-lg max-w-sm w-full p-8 relative border border-gray-700 text-white">
-            <button onclick="closeMetaConnectModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl font-bold">&times;</button>
-            <h2 class="text-3xl font-extrabold text-center mb-4">Connect to Meta Ads</h2>
-            <p class="text-center text-gray-400 mb-6">Please enter your Meta Ad Account ID to launch your campaign.</p>
-            <div class="flex flex-col space-y-4">
-                <input type="text" id="metaAdAccountId" placeholder="Enter your Meta Ad Account ID" required class="p-3 rounded-xl border border-gray-700 bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <button id="connectAndLaunchBtn" class="bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors">Connect & Launch</button>
-            </div>
-        </div>
-    </div>
+        // --- DOM Elements ---
+        const DOMElements = {
+            signupModal: document.getElementById('signupModal'), metaConnectModal: document.getElementById('metaConnectModal'),
+            productImageUpload: document.getElementById('productImageUpload'), uploadLabel: document.getElementById('uploadLabel'),
+            backgroundPromptInput: document.getElementById('backgroundPrompt'), generateAdBtn: document.getElementById('generateAdBtn'),
+            adImage: document.getElementById('adImage'), overlay: document.getElementById('overlay'),
+            overlayText: document.getElementById('overlayText'), adCopyContainer: document.getElementById('adCopyContainer'),
+            adCopyText: document.getElementById('adCopyText'), copyAdBtn: document.getElementById('copyAdBtn'),
+            resetBtn: document.getElementById('resetBtn'), canvasControls: document.getElementById('canvasControls'),
+            downloadBtn: document.getElementById('downloadBtn'), messageBox: document.getElementById('messageBox'),
+            showAdGeneratorBtn: document.getElementById('showAdGeneratorBtn'), showCampaignMakerBtn: document.getElementById('showCampaignMakerBtn'),
+            adGenerator: document.getElementById('adGenerator'), campaignMaker: document.getElementById('campaignMaker'),
+            productNameInput: document.getElementById('productName'), generateCampaignBtn: document.getElementById('generateCampaignBtn'),
+            campaignOutput: document.getElementById('campaignOutput'), campaignImageUpload: document.getElementById('campaignImageUpload'),
+            campaignUploadLabel: document.getElementById('campaignUploadLabel'), signupForm: document.getElementById('signupForm'),
+            showDashboardBtn: document.getElementById('showDashboardBtn'), myAdsDashboardSection: document.getElementById('myAdsDashboardSection'),
+            launchToMetaContainer: document.getElementById('launchToMetaContainer'), launchToMetaBtn: document.getElementById('launchToMetaBtn'),
+            metaAdAccountIdInput: document.getElementById('metaAdAccountId'), connectAndLaunchBtn: document.getElementById('connectAndLaunchBtn'),
+            addNewAdCard: document.getElementById('addNewAdCard'), addNewAdBtn: document.getElementById('addNewAdBtn'),
+            signupEmail: document.getElementById('signupEmail'),
+        };
+        
+        let productImageBase64 = null;
+        let finalAdImageBase64 = null;
+        let campaignImageBase64 = null;
 
-    <!-- Message Box for Alerts -->
-    <div id="messageBox" class="fixed inset-x-0 top-4 mx-auto p-4 bg-green-500 text-white rounded-lg shadow-lg text-center z-50 transform -translate-y-full opacity-0"></div>
+        // --- Helper Functions ---
+        function showMessageBox(message, isError = false) {
+            const { messageBox } = DOMElements;
+            messageBox.textContent = message;
+            messageBox.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
+            messageBox.className = `fixed inset-x-0 top-4 mx-auto p-4 text-white rounded-lg shadow-lg text-center z-50 transform opacity-100 translate-y-0 max-w-md ${isError ? 'bg-red-500' : 'bg-green-500'}`;
+            setTimeout(() => {
+                messageBox.className = messageBox.className.replace('opacity-100 translate-y-0', 'opacity-0 -translate-y-full');
+            }, 3000);
+        }
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="https://www.paypal.com/sdk/js?client-id=AQ8g25vryYQYUSh_-_s-3JEDIl01nQ1-p-R3g_48hpv-pCf3o2Oq2T_Vb-g-3FkGdwQKxgtqO3G0pe4P&currency=USD" data-sdk-integration-source="developer-studio"></script>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, setDoc, getDocs, doc, query, onSnapshot, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-    
-        // Firebase Setup
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        let db, auth;
-        let userId = null;
-    
-        // Initialize Firebase
-        if (Object.keys(firebaseConfig).length > 0) {
-            const app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
-            
-            // Sign in anonymously if no token is available
-            (async () => {
-                const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-                if (initialAuthToken) {
-                    try {
-                        const userCredential = await signInWithCustomToken(auth, initialAuthToken);
-                        userId = userCredential.user.uid;
-                        console.log("Signed in with custom token. User ID:", userId);
-                    } catch (error) {
-                        console.error("Custom token sign-in failed:", error);
-                        try {
-                            const userCredential = await signInAnonymously(auth);
-                            userId = userCredential.user.uid;
-                            console.log("Signed in anonymously. User ID:", userId);
-                        } catch (anonError) {
-                            console.error("Anonymous sign-in failed:", anonError);
-                        }
-                    }
-                } else {
-                    try {
-                        const userCredential = await signInAnonymously(auth);
-                        userId = userCredential.user.uid;
-                        console.log("Signed in anonymously. User ID:", userId);
-                    } catch (anonError) {
-                        console.error("Anonymous sign-in failed:", anonError);
-                    }
-                }
-            })();
-        } else {
-            console.error("Firebase config is not available. Firestore functionality will be disabled.");
-        }
-    
-        // --- Modal Logic ---
-        const signupModal = document.getElementById('signupModal');
-        const metaConnectModal = document.getElementById('metaConnectModal');
-    
-        function openMetaConnectModal() {
-            if (!finalAdImageBase64 || !adCopyText.textContent) {
-                showMessageBox('Please generate an ad first before launching.', true);
-                return;
-            }
-            metaConnectModal.classList.add('active');
-        }
-        function closeMetaConnectModal() {
-            metaConnectModal.classList.remove('active');
-        }
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        function downloadBase64Image(base64Data, filename) {
+            const link = document.createElement('a');
+            link.download = filename; link.href = base64Data;
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        }
 
-        // --- Scroller Logic ---
-        const carouselData = [
-            { src: "https://i.imgur.com/sbKrFep.png", title: "Perfume Ad" },
-            { src: "https://i.imgur.com/RCRgEIj.png", title: "Watch Ad" },
-            { src: "https://i.imgur.com/PvoIuCN.png", title: "Shoe Ad" },
-            { src: "https://i.imgur.com/5dUY1BS.png", title: "Skincare" },
-            { src: "https://i.imgur.com/zAQhPWu.png", title: "Spices" },
-            { src: "https://i.imgur.com/wnNbifw.png", title: "Botanical Facial Crème" },
-            { src: "https://i.imgur.com/lO7J2VN.png", title: "Coffee Freaks" },
-            { src: "https://i.imgur.com/Kn25ag2.png", title: "Sneakers" },
-            { src: "https://i.imgur.com/wRHLkot.png", title: "Composite Ad" },
-            { src: "https://i.imgur.com/90tB2Gc.png", title: "Radiant Serum" },
-            { src: "https://i.imgur.com/CgRamm8.png", title: "Purifying Clay Mask" },
-        ];
-    
-        function initializeScroller() {
-            const scrollerInner = document.querySelector('.scroller__inner');
-            if (scrollerInner) {
-                scrollerInner.innerHTML = ''; // Clear existing content
-                const combinedCarousel = [...carouselData, ...carouselData];
-                combinedCarousel.forEach(item => {
-                    const img = document.createElement('img');
-                    img.src = item.src;
-                    img.alt = item.title;
-                    img.onerror = () => { img.src = `https://placehold.co/180x180/E5E7EB/6B7280?text=Image+Load+Error`; };
-                    scrollerInner.appendChild(img);
-                });
-            }
-        }
-        
-        initializeScroller();
-    
-        // ===================================================================
-        // Ad & Campaign Generator App Logic
-        // ===================================================================
-        $(document).ready(function() {
-            $('#platforms').select2();
-        });
-    
-        // DOM element references
-        const uploadContainer = document.getElementById('uploadContainer');
-        const backgroundPromptInput = document.getElementById('backgroundPrompt');
-        const generateAdBtn = document.getElementById('generateAdBtn');
-        const adImage = document.getElementById('adImage');
-        const overlay = document.getElementById('overlay');
-        const overlayText = document.getElementById('overlayText');
-        const adCopyContainer = document.getElementById('adCopyContainer');
-        const adCopyText = document.getElementById('adCopyText');
-        const copyAdBtn = document.getElementById('copyAdBtn');
-        const resetBtn = document.getElementById('resetBtn');
-        const canvasControls = document.getElementById('canvasControls');
-        const downloadBtn = document.getElementById('downloadBtn');
-        const messageBox = document.getElementById('messageBox');
-        const showAdGeneratorBtn = document.getElementById('showAdGeneratorBtn');
-        const showCampaignMakerBtn = document.getElementById('showCampaignMakerBtn');
-        const adGenerator = document.getElementById('adGenerator');
-        const campaignMaker = document.getElementById('campaignMaker');
-        const productNameInput = document.getElementById('productName');
-        const generateCampaignBtn = document.getElementById('generateCampaignBtn');
-        const campaignOutput = document.getElementById('campaignOutput');
-        const campaignImageUpload = document.getElementById('campaignImageUpload');
-        const campaignUploadLabel = document.getElementById('campaignUploadLabel');
-        const showDashboardBtn = document.getElementById('showDashboardBtn');
-        const myAdsDashboardSection = document.getElementById('myAdsDashboardSection');
-        const launchToMetaContainer = document.getElementById('launchToMetaContainer');
-        const launchToMetaBtn = document.getElementById('launchToMetaBtn');
-        const metaAdAccountIdInput = document.getElementById('metaAdAccountId');
-        const connectAndLaunchBtn = document.getElementById('connectAndLaunchBtn');
-        const clearDashboardBtn = document.getElementById('clearDashboardBtn');
-        const addNewAdBtn = document.getElementById('addNewAdBtn');
-        const addNewAdCard = document.getElementById('addNewAdCard');
-        const showSettingsBtn = document.getElementById('showSettingsBtn');
-        const settingsSection = document.getElementById('settingsSection');
-        const apiKeyInput = document.getElementById('apiKeyInput');
-        const saveApiKeyBtn = document.getElementById('saveApiKeyBtn');
-    
-        let productImage = null;
-        let finalAdImageBase64 = null;
-        let campaignImage = null;
-    
-        // --- Dashboard & Firestore Logic ---
-        function getAdsCollectionRef() {
-            if (!db || !userId) {
-                console.error("Firestore DB or User ID is not available.");
-                return null;
-            }
-            return collection(db, `artifacts/${appId}/users/${userId}/ads`);
-        }
-    
-        async function saveAdToDashboard(adData) {
-            const adsRef = getAdsCollectionRef();
-            if (!adsRef) return;
-            try {
-                await addDoc(adsRef, adData);
-                showMessageBox("Ad saved to your dashboard!");
-            } catch (error) {
-                console.error("Error saving ad:", error);
-                showMessageBox("Failed to save ad.", true);
-            }
-        }
-    
-        function loadAdsToDashboard() {
-            const adsDashboardGrid = document.getElementById('adsDashboardGrid');
-            adsDashboardGrid.innerHTML = '';
-            
-            if (!userId) {
-                adsDashboardGrid.innerHTML = `<div class="col-span-1 md:col-span-2 lg:col-span-3 text-center text-red-500 py-10">User not authenticated. Please refresh.</div>`;
-                adsDashboardGrid.appendChild(addNewAdCard);
-                return;
-            }
-    
-            const adsRef = getAdsCollectionRef();
-            if (!adsRef) return;
-    
-            const q = query(adsRef);
-            onSnapshot(q, (querySnapshot) => {
-                adsDashboardGrid.innerHTML = ''; // Clear the grid for real-time updates
-                
-                if (querySnapshot.empty) {
-                    const placeholderCard = document.createElement('div');
-                    placeholderCard.className = 'text-center text-gray-400 col-span-1 md:col-span-2 lg:col-span-3 py-10';
-                    placeholderCard.innerHTML = `<p>You haven't launched any ads yet.</p><p>Create an ad and click "Launch" to save it here!</p>`;
-                    adsDashboardGrid.appendChild(placeholderCard);
-                } else {
-                    querySnapshot.forEach(doc => {
-                        const ad = doc.data();
-                        const adCard = document.createElement('div');
-                        adCard.className = 'bg-gray-800 rounded-2xl border border-gray-700 overflow-hidden';
-                        adCard.innerHTML = `
-                            <img src="${ad.imageBase64}" alt="Ad Preview" class="w-full h-64 object-cover">
-                            <div class="p-6">
-                                <h3 class="font-semibold text-white mb-2">"${ad.headline}"</h3>
-                                <p class="text-sm text-gray-400 mb-4">Status: <span class="font-semibold text-yellow-400">In Review</span></p>
-                                <div class="grid grid-cols-3 gap-4 text-center">
-                                    <div><p class="text-xs text-gray-400">Reach</p><p class="text-lg font-bold text-white">${ad.reach}</p></div>
-                                    <div><p class="text-xs text-gray-400">Clicks</p><p class="text-lg font-bold text-white">${ad.clicks}</p></div>
-                                    <div><p class="text-xs text-gray-400">CTR</p><p class="text-lg font-bold text-white">${ad.ctr}</p></div>
-                                </div>
-                                <button class="mt-4 w-full bg-gray-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors">View Performance</button>
-                            </div>`;
-                        adsDashboardGrid.appendChild(adCard);
-                    });
-                }
-                adsDashboardGrid.appendChild(addNewAdCard); // Always re-append the "Add New" card
-            });
-        }
-    
-        async function clearDashboard() {
-            const adsRef = getAdsCollectionRef();
-            if (!adsRef) return;
-            try {
-                const q = query(adsRef);
-                const querySnapshot = await getDocs(q);
-                const deletePromises = querySnapshot.docs.map(docToDelete => deleteDoc(doc(db, adsRef.path, docToDelete.id)));
-                await Promise.all(deletePromises);
-                showMessageBox('Dashboard cleared successfully.');
-            } catch (error) {
-                console.error("Error clearing dashboard:", error);
-                showMessageBox("Failed to clear dashboard.", true);
-            }
-        }
-    
-        function showMessageBox(message, isError = false) {
-            messageBox.textContent = message;
-            messageBox.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
-            messageBox.classList.remove('opacity-0', '-translate-y-full', 'bg-green-500', 'bg-red-500');
-            messageBox.classList.add('opacity-100', 'translate-y-0', isError ? 'bg-red-500' : 'bg-green-500');
-            setTimeout(() => {
-                messageBox.classList.remove('opacity-100', 'translate-y-0');
-                messageBox.classList.add('opacity-0', '-translate-y-full');
-            }, 3000);
-        }
-    
-        function fileToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve({
-                    data: reader.result.split(',')[1],
-                    type: file.type
-                });
-                reader.onerror = error => reject(error);
-                reader.readAsDataURL(file);
-            });
-        }
-        
-        async function getApiKey() {
-            if (!userId || !db) return null;
-            try {
-                const docRef = doc(db, `artifacts/${appId}/users/${userId}/settings/api`);
-                const docSnap = await getDoc(docRef);
-                return docSnap.exists() ? docSnap.data().key : null;
-            } catch (error) {
-                console.error("Error fetching API key:", error);
-                return null;
-            }
-        }
-    
-        async function saveApiKey(key) {
-            if (!userId || !db) {
-                showMessageBox("User not authenticated. Cannot save API key.", true);
-                return;
-            }
-            try {
-                const docRef = doc(db, `artifacts/${appId}/users/${userId}/settings/api`);
-                await setDoc(docRef, { key });
-                showMessageBox('API Key saved successfully!');
-            } catch (error) {
-                console.error("Error saving API key:", error);
-                showMessageBox('Failed to save API Key.', true);
-            }
-        }
-    
-        function downloadBase64Image(base64Data, filename) {
-            const link = document.createElement('a');
-            link.download = filename;
-            link.href = base64Data;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-        
-        async function analyzeProduct(base64ImageData, imageType) {
-            const apiKey = await getApiKey();
-            if (!apiKey) throw new Error('API Key not set.');
-            const analyzePrompt = "Identify the main product and its key features in the image. Focus on a factual description of what the item is, for use in an ad campaign.";
-            const payload = { contents: [{ parts: [ { text: analyzePrompt }, { inlineData: { mimeType: imageType, data: base64ImageData } } ] }] };
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-            try {
-                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const result = await response.json();
-                return result?.candidates?.[0]?.content?.parts?.[0]?.text || "product";
-            } catch (error) { console.error(`Product analysis failed:`, error); return "product"; }
-        }
-    
-        async function generateAdCopy(prompt, productDescription) {
-            const apiKey = await getApiKey();
-            if (!apiKey) throw new Error('API Key not set.');
-            if (!prompt || !productDescription) return null;
-            let textPrompt = `Create a compelling, short ad for a ${productDescription.toLowerCase()} with a background of: "${prompt}". Provide a punchy headline and a brief body text. Emphasize botanical ingredients and scientific benefits. Format as: Headline: [Your Headline] Body: [Your Body Text]`;
-            const payload = { contents: [{ role: "user", parts: [{ text: textPrompt }] }] };
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-            try {
-                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const result = await response.json();
-                return result?.candidates?.[0]?.content?.parts?.[0]?.text || "Failed to generate copy.";
-            } catch (error) { console.error('Ad copy generation failed:', error); return "Failed to generate copy."; }
-        }
-        
-        async function compositeAdWithAI(prompt, adCopy, productImageBase64, imageType) {
-            const apiKey = await getApiKey();
-            if (!apiKey) throw new Error('API Key not set.');
-            const newPrompt = `Create a professional marketing ad. The background should be: "${prompt}". Place the provided product image prominently. Integrate the ad copy seamlessly into the design. Ad copy: "${adCopy}". Ensure the final image is visually appealing and high-resolution.`;
-            const payload = { contents: [{ parts: [ { text: newPrompt }, { inlineData: { mimeType: imageType, data: productImageBase64 } } ] }], generationConfig: { responseModalities: ['TEXT', 'IMAGE'] } };
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${apiKey}`;
-            try {
-                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const result = await response.json();
-                return result?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
-            } catch (error) { console.error('Image compositing failed:', error); return null; }
-        }
-    
-        async function generateCampaign(productName, platforms, image = null) {
-            const apiKey = await getApiKey();
-            if (!apiKey) throw new Error('API Key not set.');
-            const basePrompt = `Create a social media campaign for the following platforms: ${platforms.join(', ')}. For each platform, provide a "headline", "ad_copy", "visual_concept", and "call_to_action". Focus on highlighting the scientific and botanical benefits of the product. Format as a single JSON array of objects. Each object in the array should represent a platform and contain the keys "platform_name", "headline", "ad_copy", "visual_concept", and "call_to_action".`;
-            
-            const payload = {
-                contents: [{ role: "user", parts: [] }],
-                generationConfig: {
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: "ARRAY",
-                        items: {
-                            type: "OBJECT",
-                            properties: {
-                                "platform_name": { "type": "STRING" },
-                                "headline": { "type": "STRING" },
-                                "ad_copy": { "type": "STRING" },
-                                "visual_concept": { "type": "STRING" },
-                                "call_to_action": { "type": "STRING" }
-                            },
-                            required: ["platform_name", "headline", "ad_copy", "visual_concept", "call_to_action"]
-                        }
-                    }
-                }
-            };
-            
-            let campaignPrompt;
-            if (image && image.data) {
-                const productDescription = await analyzeProduct(image.data, image.type);
-                const effectiveProductName = productName || productDescription;
-                campaignPrompt = `Based on the image of a ${effectiveProductName}, ${basePrompt}`;
-                payload.contents[0].parts.push({ text: campaignPrompt });
-                payload.contents[0].parts.push({ inlineData: { mimeType: image.type, data: image.data } });
-            } else {
-                campaignPrompt = `Create a campaign for a product called "${productName}". ${basePrompt}`;
-                payload.contents[0].parts.push({ text: campaignPrompt });
-            }
-    
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-            try {
-                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const result = await response.json();
-                const textResponse = result?.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (!textResponse) throw new Error("Invalid response from API.");
-                return JSON.parse(textResponse);
-            } catch (error) { console.error('Campaign generation failed:', error); return null; }
-        }
-    
-        async function generateCampaignVisual(prompt) {
-            const apiKey = await getApiKey();
-            if (!apiKey) throw new Error('API Key not set.');
-            const payload = { instances: [{ prompt: prompt }], parameters: { "sampleCount": 1 } };
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
-            try {
-                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const result = await response.json();
-                return result.predictions?.[0]?.bytesBase64Encoded;
-            } catch (error) { console.error('Campaign visual generation failed:', error); return null; }
-        }
-    
-        async function handleGenerateAd() {
-            const apiKey = await getApiKey();
-            if (!apiKey) {
-                showMessageBox('Please add your Google AI API key in Settings first.', true);
-                showSettingsBtn.click();
-                return;
-            }
-            const prompt = backgroundPromptInput.value.trim();
-            if (!prompt || !productImage) return showMessageBox('Please enter a prompt and upload an image.', true);
-            generateAdBtn.disabled = true;
-            generateAdBtn.innerHTML = `Generating...`;
-            overlay.classList.remove('hidden');
-            overlayText.textContent = 'Analyzing product...';
-            try {
-                const productDescription = await analyzeProduct(productImage.data, productImage.type);
-                overlayText.textContent = 'Generating ad copy...';
-                const adCopy = await generateAdCopy(prompt, productDescription);
-                adCopyText.textContent = adCopy;
-                overlayText.textContent = 'Compositing final ad image...';
-                finalAdImageBase64 = await compositeAdWithAI(prompt, adCopy, productImage.data, productImage.type);
-                if (finalAdImageBase64) {
-                    adImage.src = `data:image/png;base64,${finalAdImageBase64}`;
-                    overlay.classList.add('hidden');
-                    adCopyContainer.classList.remove('hidden');
-                    canvasControls.classList.remove('hidden');
-                    launchToMetaContainer.classList.remove('hidden');
-                } else throw new Error('Failed to generate ad image.');
-            } catch (error) {
-                overlayText.textContent = `Error: ${error.message}`;
-            } finally {
-                generateAdBtn.disabled = false;
-                generateAdBtn.innerHTML = 'Generate Ad';
-            }
-        }
-        
-        function setupFileUpload() {
-            const productImageUpload = document.getElementById('productImageUpload');
-            const uploadLabel = document.getElementById('uploadLabel');
-            
-            productImageUpload.addEventListener('change', async (event) => {
-                const file = event.target.files[0];
-                if (file) {
-                    uploadLabel.textContent = `Uploaded: ${file.name}`;
-                    uploadLabel.classList.add('bg-green-600', 'text-white');
-                    productImage = await fileToBase64(file);
-                }
-            });
-        }
-    
-    
-        async function handleCampaignImageUpload(event) {
-            const file = event.target.files[0];
-            if (file) {
-                campaignUploadLabel.textContent = `Uploaded: ${file.name}`;
-                campaignUploadLabel.classList.add('bg-green-600', 'text-white');
-                campaignImage = await fileToBase64(file);
-            }
-        }
-    
-        function handleDownloadAd() {
-            if (!finalAdImageBase64) return showMessageBox('Please generate an ad first.', true);
-            downloadBase64Image(`data:image/png;base64,${finalAdImageBase64}`, 'composite-ad.png');
-        }
-    
-        function handleDownloadVisual(event) {
-            const button = event.target.closest('button');
-            const platform = button.dataset.platform;
-            const imgElement = document.getElementById(`img-${platform}`);
-            if (imgElement && imgElement.src) downloadBase64Image(imgElement.src, `${platform}-visual.png`);
-        }
-        
-        async function handleLaunchToMeta(metaId) {
-            connectAndLaunchBtn.disabled = true;
-            connectAndLaunchBtn.innerHTML = 'Launching...';
-    
-            setTimeout(async () => {
-                closeMetaConnectModal();
-                showMessageBox(`Campaign (simulation) launched successfully! Ad saved to dashboard.`);
-    
-                const adCopyContent = adCopyText.textContent;
-                let headline = "Newly Launched Ad";
-                if (adCopyContent && adCopyContent.includes("Headline:")) {
-                    headline = adCopyContent.split("Headline:")[1].split("Body:")[0].trim();
-                }
-                const reach = (Math.random() * 5 + 1).toFixed(1) + 'K';
-                const clicks = (Math.random() * 500 + 100).toFixed(0);
-                const ctr = (Math.random() * 5 + 2).toFixed(1) + '%';
-    
-                const adData = {
-                    imageBase64: `data:image/png;base64,${finalAdImageBase64}`,
-                    headline: headline,
-                    reach: reach,
-                    clicks: clicks,
-                    ctr: ctr
-                };
-    
-                await saveAdToDashboard(adData);
-    
-                connectAndLaunchBtn.disabled = false;
-                connectAndLaunchBtn.innerHTML = 'Connect & Launch';
-                
-                showDashboardBtn.click();
-    
-            }, 2000);
-        }
-    
-        function handleReset() {
-            backgroundPromptInput.value = '';
-            
-            uploadContainer.innerHTML = `
-                <label id="uploadLabel" class="cursor-pointer mt-4 w-full text-gray-200 font-bold py-3 px-6 rounded-xl shadow-md text-center bg-gray-700 hover:bg-gray-600 block transition-colors">
-                    Upload Product Image
-                    <input type="file" id="productImageUpload" accept="image/*" class="hidden" />
-                </label>`;
-            setupFileUpload();
-    
-            productImage = null;
-            finalAdImageBase64 = null;
-            adImage.src = '';
-            adCopyContainer.classList.add('hidden');
-            adCopyText.textContent = '';
-            canvasControls.classList.add('hidden');
-            launchToMetaContainer.classList.add('hidden');
-            overlay.classList.remove('hidden');
-            overlayText.textContent = 'Enter a prompt and upload an image.';
-            showMessageBox('Generator has been reset.');
-        }
-    
-        async function handleGenerateCampaign() {
-            const apiKey = await getApiKey();
-            if (!apiKey) {
-                showMessageBox('Please add your Google AI API key in Settings first.', true);
-                showSettingsBtn.click();
-                return;
-            }
-            const productName = productNameInput.value.trim();
-            const platforms = $('#platforms').val();
-            if ((!productName && !campaignImage) || platforms.length === 0) return showMessageBox('Please provide a product name or image and select platforms.', true);
-            
-            generateCampaignBtn.disabled = true;
-            generateCampaignBtn.textContent = 'Generating...';
-            campaignOutput.innerHTML = `<div class="col-span-2 text-center p-4 text-gray-400">Generating campaign...</div>`;
-            
-            try {
-                const campaignData = await generateCampaign(productName, platforms, campaignImage);
-                if (campaignData) {
-                    campaignOutput.innerHTML = '';
-                    for (const platformData of campaignData) {
-                        const platform = platformData.platform_name.toLowerCase();
-                        const card = document.createElement('div');
-                        card.className = 'p-6 bg-gray-800 rounded-2xl border border-gray-700 shadow-md';
-                        card.innerHTML = `
-                            <h3 class="text-xl font-bold">${platformData.platform_name.charAt(0).toUpperCase() + platformData.platform_name.slice(1)}</h3>
-                            <p class="text-sm text-gray-400"><strong>Headline:</strong> ${platformData.headline || 'N/A'}</p>
-                            <p class="text-sm text-gray-400"><strong>Ad Copy:</strong> ${platformData.ad_copy || 'N/A'}</p>
-                            <p class="text-sm text-gray-400"><strong>Visual Concept:</strong> ${platformData.visual_concept || 'N/A'}</p>
-                            <p class="text-sm text-gray-400"><strong>Call to Action:</strong> ${platformData.call_to_action || 'N/A'}</p>
-                            <div class="mt-4 aspect-video bg-gray-700 rounded-lg flex items-center justify-center">
-                                <img id="img-${platform}" class="hidden w-full h-full object-cover rounded-lg" />
-                                <div id="loader-${platform}" class="text-gray-400">Loading visual...</div>
-                            </div>
-                            <div id="controls-${platform}" class="mt-4 flex space-x-2 hidden">
-                                <button class="download-visual-btn flex-1 bg-green-600 text-white text-sm py-2 px-3 rounded-lg hover:bg-green-700 transition-colors" data-platform="${platform}">Download</button>
-                                <button class="use-in-ad-gen-btn flex-1 bg-blue-600 text-white text-sm py-2 px-3 rounded-lg hover:bg-blue-700 transition-colors" data-platform="${platform}" data-concept="${platformData.visual_concept || ''}">Use in Ad Generator</button>
-                            </div>`;
-                        campaignOutput.appendChild(card);
-                        
-                        const imgElement = document.getElementById(`img-${platform}`);
-                        const loaderElement = document.getElementById(`loader-${platform}`);
-                        const controlsElement = document.getElementById(`controls-${platform}`);
-                        const downloadBtnElement = card.querySelector('.download-visual-btn');
-                        
-                        downloadBtnElement.addEventListener('click', handleDownloadVisual);
-    
-                        if (campaignImage && campaignImage.data) {
-                            imgElement.src = `data:${campaignImage.type};base64,${campaignImage.data}`;
-                            imgElement.classList.remove('hidden');
-                            loaderElement.classList.add('hidden');
-                            controlsElement.classList.remove('hidden');
-                        } else if (platformData.visual_concept) {
-                            try {
-                                const visualBase64 = await generateCampaignVisual(`Marketing photo: ${platformData.visual_concept} for ${productName}.`);
-                                if (visualBase64) {
-                                    imgElement.src = `data:image/png;base64,${visualBase64}`;
-                                    imgElement.classList.remove('hidden');
-                                    loaderElement.classList.add('hidden');
-                                    controlsElement.classList.remove('hidden');
-                                } else throw new Error('API returned no data.');
-                            } catch(error) {
-                                console.error(`Visual generation failed for ${platform}:`, error);
-                                loaderElement.textContent = 'Visual generation failed.';
-                            }
-                        } else {
-                            loaderElement.textContent = 'No visual concept.';
-                        }
-                    }
-                    document.querySelectorAll('.use-in-ad-gen-btn').forEach(button => button.addEventListener('click', handleUseInAdGenerator));
-                } else {
-                    throw new Error('Failed to generate campaign data.');
-                }
-            } catch (error) {
-                campaignOutput.innerHTML = `<div class="col-span-2 text-center text-red-500">${error.message}</div>`;
-            } finally {
-                generateCampaignBtn.disabled = false;
-                generateCampaignBtn.textContent = 'Generate Campaign';
-            }
-        }
-    
-        function handleUseInAdGenerator(event) {
-            const button = event.target;
-            const platform = button.dataset.platform;
-            const concept = button.dataset.concept;
-            const imgElement = document.getElementById(`img-${platform}`);
-    
-            if (imgElement && imgElement.src && imgElement.src.startsWith('data:image')) {
-                showAdGeneratorBtn.click();
-                backgroundPromptInput.value = concept;
-                
-                const [header, data] = imgElement.src.split(',');
-                const type = header.split(':')[1].split(';')[0];
-    
-                productImage = { data, type };
-                adImage.src = imgElement.src;
-                
-                const uploadLabel = document.getElementById('uploadLabel');
-                uploadLabel.textContent = `Using image from ${platform} campaign`;
-                uploadLabel.classList.add('bg-green-600', 'text-white');
-                overlay.classList.add('hidden');
-                showMessageBox(`Loaded visual concept from ${platform} into Ad Generator.`);
-                document.getElementById('adGenerator').scrollIntoView({ behavior: 'smooth' });
-            } else {
-                showMessageBox('Could not find the image to use in the Ad Generator.', true);
-            }
-        }
-        
-        function setActiveButton(activeBtn) {
-            [showAdGeneratorBtn, showCampaignMakerBtn, showDashboardBtn, showSettingsBtn].forEach(btn => {
-                if (btn === activeBtn) {
-                    btn.classList.add('bg-indigo-600', 'text-white');
-                    btn.classList.remove('bg-gray-200', 'text-gray-800');
-                } else {
-                    btn.classList.remove('bg-indigo-600', 'text-white');
-                    btn.classList.add('bg-gray-200', 'text-gray-800');
-                }
-            });
-        }
-        
-        function showSection(sectionToShow) {
-            [adGenerator, campaignMaker, myAdsDashboardSection, settingsSection].forEach(section => {
-                if (section === sectionToShow) {
-                    section.classList.remove('hidden');
-                } else {
-                    section.classList.add('hidden');
-                }
-            });
-        }
-    
-    
-        window.addEventListener('load', async () => {
-            setupFileUpload();
-            
-            const savedKey = await getApiKey();
-            if (savedKey) {
-                apiKeyInput.value = savedKey;
-                showMessageBox("Your API key has been loaded!");
-            }
-    
-            // Event Listeners
-            generateAdBtn.addEventListener('click', handleGenerateAd);
-            resetBtn.addEventListener('click', handleReset);
-            campaignImageUpload.addEventListener('change', handleCampaignImageUpload);
-            downloadBtn.addEventListener('click', handleDownloadAd);
-            generateCampaignBtn.addEventListener('click', handleGenerateCampaign);
-            launchToMetaBtn.addEventListener('click', openMetaConnectModal);
-            clearDashboardBtn.addEventListener('click', clearDashboard);
-            
-            copyAdBtn.addEventListener('click', () => {
-                navigator.clipboard.writeText(adCopyText.textContent)
-                    .then(() => showMessageBox('Ad copy copied to clipboard!'))
-                    .catch(err => showMessageBox('Failed to copy text.', true));
-            });
-            
-            connectAndLaunchBtn.addEventListener('click', () => {
-                const metaId = metaAdAccountIdInput.value.trim();
-                if (!metaId) {
-                    showMessageBox('Please enter a valid Meta Ad Account ID.', true);
-                    return;
-                }
-                handleLaunchToMeta(metaId);
-            });
-            
-            saveApiKeyBtn.addEventListener('click', async () => {
-                const key = apiKeyInput.value.trim();
-                if (key) {
-                    await saveApiKey(key);
-                } else {
-                    showMessageBox('Please enter a valid API key.', true);
-                }
-            });
-    
-            showAdGeneratorBtn.addEventListener('click', () => {
-                showSection(adGenerator);
-                setActiveButton(showAdGeneratorBtn);
-            });
-    
-            showCampaignMakerBtn.addEventListener('click', () => {
-                showSection(campaignMaker);
-                setActiveButton(showCampaignMakerBtn);
-            });
-    
-            showDashboardBtn.addEventListener('click', () => {
-                showSection(myAdsDashboardSection);
-                setActiveButton(showDashboardBtn);
-                loadAdsToDashboard();
-            });
-            
-            showSettingsBtn.addEventListener('click', async () => {
-                showSection(settingsSection);
-                setActiveButton(showSettingsBtn);
-                const currentKey = await getApiKey();
-                apiKeyInput.value = currentKey || '';
-            });
-    
-            addNewAdCard.addEventListener('click', () => showAdGeneratorBtn.click());
-            addNewAdBtn.addEventListener('click', () => showAdGeneratorBtn.click());
-        });
-    </script>
+        async function callSecureApi(type, payload) {
+            const response = await fetch(SECURE_API_ENDPOINT, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type, payload })
+            });
+            if (!response.ok) {
+                const errorResult = await response.json().catch(() => ({ error: 'Failed to parse error response from server.' }));
+                throw new Error(errorResult.error || `Server responded with status: ${response.status}`);
+            }
+            return response.json();
+        }
+        
+        // --- Modal Logic ---
+        function openSignupModal() { DOMElements.signupModal.classList.add('active'); }
+        function closeSignupModal() { DOMElements.signupModal.classList.remove('active'); }
+        function openMetaConnectModal() {
+            if (isTrial) {
+                showMessageBox('Please sign up to launch campaigns!', true);
+                openSignupModal();
+                return;
+            }
+            if (!finalAdImageBase64 || !DOMElements.adCopyText.textContent) {
+                showMessageBox('Please generate an ad first before launching.', true);
+                return;
+            }
+            DOMElements.metaConnectModal.classList.add('active');
+        }
+        function closeMetaConnectModal() { DOMElements.metaConnectModal.classList.remove('active'); }
+
+        // --- Scroller Logic ---
+        function initializeScroller() {
+            const carouselData = [
+                { src: "https://i.imgur.com/RzmcLQd.png", title: "Bomber Jacket" }, { src: "https://i.imgur.com/5dUY1BS.png", title: "Skincare" },
+                { src: "https://i.imgur.com/zAQhPWu.png", title: "Spices" }, { src: "https://i.imgur.com/wnNbifw.png", title: "Botanical Facial Crème" },
+                { src: "https://i.imgur.com/lO7J2VN.png", title: "Coffee Freaks" }, { src: "https://i.imgur.com/Kn25ag2.png", title: "Sneakers" },
+                { src: "https://i.imgur.com/wRHLkot.png", title: "Composite Ad" }, { src: "https://i.imgur.com/90tB2Gc.png", title: "Radiant Serum" },
+                { src: "https://i.imgur.com/CgRamm8.png", title: "Purifying Clay Mask" }, { src: "https://i.imgur.com/ozbQKtz.png", title: "Modern Chair" },
+                { src: "https://i.imgur.com/NCisB59.png", title: "Acoustic Guitar" }, { src: "https://i.imgur.com/Gr7uHLH.png", title: "Watch" },
+                { src: "https://i.imgur.com/X6v7j3R.png", title: "Headphones" }, { src: "https://i.imgur.com/ozNyrpZ.png", title: "Camera" },
+                { src: "https://i.imgur.com/F1gINsg.png", title: "Drone" }, { src: "https://i.imgur.com/yZgDYMe.png", title: "Floral Skincare" },
+                { src: "https://i.imgur.com/HBhYJio.png", title: "Modern Skincare" }, { src: "https://i.imgur.com/STmo7rw.png", title: "Luxury Perfume" },
+                { src: "https://i.imgur.com/WbD8Fm4.png", title: "Tech Gadgets" }, { src: "https://i.imgur.com/4mfZLFF.png", title: "Fitness Supplement" },
+                { src: "https://i.imgur.com/wyilFF1.png", title: "Outdoor Wear" }, { src: "https://i.imgur.com/ozTttVi.png", title: "Watch Ad" },
+                { src: "https://i.imgur.com/HIxo7BS.png", title: "Shoe Ad" }, { src: "https://i.imgur.com/MxWnqDu.png", title: "Skincare Set" },
+                { src: "https://i.imgur.com/vBK0u09.png", title: "Perfume Ad" }, { src: "https://i.imgur.com/gsaAUW7.png", title: "Foundation Ad" },
+                { src: "https://i.imgur.com/r0kRMIq.png", title: "Serum Ad" },
+                { src: "https://i.imgur.com/sbKrFep.png", title: "Before Example 2" }, { src: "https://i.imgur.com/PvoIuCN.png", title: "After Example 2" },
+                { src: "https://i.imgur.com/RCRgEIj.png", title: "AI Ad Example 3" }, { src: "https://i.imgur.com/NXeFCWd.png", title: "AI Ad Example 4" },
+            ];
+            const scrollerInner = document.querySelector('.scroller__inner');
+            if (!scrollerInner) return;
+            const fragment = document.createDocumentFragment();
+            [...carouselData, ...carouselData].forEach(item => {
+                const img = document.createElement('img');
+                img.src = item.src; img.alt = item.title;
+                img.onerror = () => { img.src = `https://placehold.co/180x180/374151/9CA3AF?text=Error`; };
+                fragment.appendChild(img);
+            });
+            scrollerInner.appendChild(fragment);
+        }
+
+        // --- Main App Logic ---
+        async function handleGenerateAd() {
+            const { backgroundPromptInput, generateAdBtn, overlay, overlayText, adImage, adCopyContainer, adCopyText, canvasControls, launchToMetaContainer } = DOMElements;
+            const prompt = backgroundPromptInput.value.trim();
+            if (!prompt || !productImageBase64) return showMessageBox('Please enter a prompt and upload an image.', true);
+
+            generateAdBtn.disabled = true;
+            generateAdBtn.innerHTML = `Generating...`;
+            overlay.classList.remove('hidden');
+            
+            try {
+                overlayText.textContent = 'Analyzing product...';
+                const analysisResult = await callSecureApi('productAnalysis', { contents: [{ parts: [ { text: "Identify the main product and its key features in the image. Focus on a factual description of what the item is, for use in an ad campaign." }, { inlineData: { mimeType: "image/jpeg", data: productImageBase64 } } ] }] });
+                const productDescription = analysisResult?.candidates?.[0]?.content?.parts?.[0]?.text || "product";
+
+                overlayText.textContent = 'Generating ad copy...';
+                const adCopyPrompt = `Create a compelling, short ad for a ${productDescription.toLowerCase()} with a background of: "${prompt}". Provide a punchy headline and a brief body text. Emphasize botanical ingredients and scientific benefits. Format as: Headline: [Your Headline] Body: [Your Body Text]`;
+                const adCopyResult = await callSecureApi('adCopy', { contents: [{ role: "user", parts: [{ text: adCopyPrompt }] }] });
+                const adCopy = adCopyResult?.candidates?.[0]?.content?.parts?.[0]?.text || "Failed to generate copy.";
+                adCopyText.textContent = adCopy;
+
+                overlayText.textContent = 'Compositing final ad image...';
+                const compositePrompt = `Create a professional marketing ad. The background should be: "${prompt}". Place the provided product image prominently. Integrate the ad copy seamlessly into the design. Ad copy: "${adCopy}". Ensure the final image is visually appealing and high-resolution.`;
+                const compositeResult = await callSecureApi('adImageComposite', { contents: [{ parts: [ { text: compositePrompt }, { inlineData: { mimeType: "image/jpeg", data: productImageBase64 } } ] }], generationConfig: { responseModalities: ['TEXT', 'IMAGE'] } });
+                finalAdImageBase64 = compositeResult?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
+
+                if (finalAdImageBase64) {
+                    adImage.src = `data:image/png;base64,${finalAdImageBase64}`;
+                    overlay.classList.add('hidden');
+                    adCopyContainer.classList.remove('hidden');
+                    canvasControls.classList.remove('hidden');
+                    launchToMetaContainer.classList.remove('hidden');
+                } else throw new Error('Failed to generate ad image.');
+            } catch (error) {
+                console.error('Ad Generation Error:', error);
+                overlayText.textContent = `Error: ${error.message}`;
+                showMessageBox(error.message, true);
+            } finally {
+                generateAdBtn.disabled = false;
+                generateAdBtn.innerHTML = 'Generate Ad';
+            }
+        }
+        
+        async function handleGenerateCampaign() {
+            const { productNameInput, generateCampaignBtn, campaignOutput } = DOMElements;
+            const productName = productNameInput.value.trim();
+            const platforms = $('#platforms').val();
+            if ((!productName && !campaignImageBase64) || platforms.length === 0) return showMessageBox('Please provide a product name or image and select platforms.', true);
+
+            generateCampaignBtn.disabled = true;
+            generateCampaignBtn.textContent = 'Generating...';
+            campaignOutput.innerHTML = `<div class="col-span-2 text-center p-4 text-gray-400">Generating campaign, please wait...</div>`;
+
+            try {
+                const basePrompt = `Create a social media campaign for the following platforms: ${platforms.join(', ')}. For each platform, provide a "headline", "ad_copy", "visual_concept", and "call_to_action". Focus on highlighting the scientific and botanical benefits of the product. Format as a single JSON array of objects. Each object should have keys "platform_name", "headline", "ad_copy", "visual_concept", "call_to_action".`;
+                const campaignTextPayload = { contents: [{ role: "user", parts: [] }], generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "OBJECT", properties: { "platform_name": { "type": "STRING" }, "headline": { "type": "STRING" }, "ad_copy": { "type": "STRING" }, "visual_concept": { "type": "STRING" }, "call_to_action": { "type": "STRING" } }, required: ["platform_name", "headline", "ad_copy", "visual_concept", "call_to_action"] } } } };
+                
+                if (campaignImageBase64) {
+                    const descResult = await callSecureApi('productAnalysis', { contents: [{ parts: [{ text: "Describe this product." }, { inlineData: { mimeType: "image/jpeg", data: campaignImageBase64 } }] }] });
+                    const pDesc = descResult.candidates[0].content.parts[0].text;
+                    const ePN = productName || pDesc;
+                    campaignTextPayload.contents[0].parts.push({ text: `Based on the image of a ${ePN}, ${basePrompt}` }, { inlineData: { mimeType: "image/jpeg", data: campaignImageBase64 } });
+                } else {
+                    campaignTextPayload.contents[0].parts.push({ text: `Create a campaign for a product called "${productName}". ${basePrompt}` });
+                }
+
+                const textResult = await callSecureApi('campaignText', campaignTextPayload);
+                const campaignData = JSON.parse(textResult?.candidates?.[0]?.content?.parts?.[0]?.text);
+                if (!campaignData) throw new Error('Failed to get campaign data.');
+                
+                campaignOutput.innerHTML = '';
+                for (const platformData of campaignData) {
+                    const card = createCampaignCard(platformData);
+                    campaignOutput.appendChild(card);
+                    generateAndDisplayVisual(platformData, productName);
+                }
+            } catch (error) {
+                console.error("Campaign Generation Error:", error);
+                campaignOutput.innerHTML = `<div class="col-span-2 text-center text-red-500">Failed to generate campaign: ${error.message}</div>`;
+                showMessageBox(error.message, true);
+            } finally {
+                generateCampaignBtn.disabled = false;
+                generateCampaignBtn.textContent = 'Generate Campaign';
+            }
+        }
+        
+        function createCampaignCard(platformData) {
+            const platform = platformData.platform_name.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const card = document.createElement('div');
+            card.className = 'p-6 bg-gray-800 rounded-2xl border border-gray-700 shadow-md';
+            card.innerHTML = `<h3 class="text-xl font-bold">${platformData.platform_name}</h3><p class="text-sm text-gray-400 mt-2"><strong>Headline:</strong> ${platformData.headline || 'N/A'}</p><p class="text-sm text-gray-400"><strong>Ad Copy:</strong> ${platformData.ad_copy || 'N/A'}</p><p class="text-sm text-gray-400"><strong>Visual Concept:</strong> ${platformData.visual_concept || 'N/A'}</p><p class="text-sm text-gray-400"><strong>Call to Action:</strong> ${platformData.call_to_action || 'N/A'}</p><div class="mt-4 aspect-video bg-gray-700 rounded-lg flex items-center justify-center"><img id="img-${platform}" class="hidden w-full h-full object-cover rounded-lg" /><div id="loader-${platform}" class="text-gray-400">Loading visual...</div></div><div id="controls-${platform}" class="mt-4 flex space-x-2 hidden"><button class="download-visual-btn flex-1 bg-green-600 text-white text-sm py-2 px-3 rounded-lg hover:bg-green-700 transition-colors">Download</button><button class="use-in-ad-gen-btn flex-1 bg-blue-600 text-white text-sm py-2 px-3 rounded-lg hover:bg-blue-700 transition-colors" data-platform="${platform}" data-concept="${platformData.visual_concept || ''}">Use in Ad Generator</button></div>`;
+            return card;
+        }
+
+        async function generateAndDisplayVisual(platformData, productName) {
+            const platform = platformData.platform_name.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const imgEl = document.getElementById(`img-${platform}`);
+            const loaderEl = document.getElementById(`loader-${platform}`);
+            const controlsEl = document.getElementById(`controls-${platform}`);
+            if (campaignImageBase64) {
+                 imgEl.src = `data:image/jpeg;base64,${campaignImageBase64}`;
+                 imgEl.classList.remove('hidden');
+                 loaderEl.classList.add('hidden');
+                 controlsEl.classList.remove('hidden');
+            } else if (platformData.visual_concept) {
+                try {
+                    const visualResult = await callSecureApi('campaignVisual', { instances: [{ prompt: `Marketing photo: ${platformData.visual_concept} for ${productName}.` }], parameters: { "sampleCount": 1 } });
+                    const visualBase64 = visualResult.predictions?.[0]?.bytesBase64Encoded;
+                    if (visualBase64) {
+                        imgEl.src = `data:image/png;base64,${visualBase64}`;
+                        imgEl.classList.remove('hidden');
+                        loaderEl.classList.add('hidden');
+                        controlsEl.classList.remove('hidden');
+                    } else throw new Error('API returned no data.');
+                } catch (error) {
+                    console.error(`Visual generation failed for ${platform}:`, error);
+                    loaderEl.textContent = 'Visual generation failed.';
+                }
+            } else {
+                loaderEl.textContent = 'No visual concept.';
+            }
+        }
+
+        function setupEventListeners() {
+            const { generateAdBtn, resetBtn, productImageUpload, campaignImageUpload, downloadBtn, generateCampaignBtn, launchToMetaBtn, connectAndLaunchBtn, showAdGeneratorBtn, showCampaignMakerBtn, showDashboardBtn, addNewAdCard, addNewAdBtn, signupForm, copyAdBtn, campaignOutput } = DOMElements;
+            generateAdBtn.addEventListener('click', handleGenerateAd);
+            resetBtn.addEventListener('click', handleReset);
+            productImageUpload.addEventListener('change', handleImageUpload);
+            campaignImageUpload.addEventListener('change', handleCampaignImageUpload);
+            downloadBtn.addEventListener('click', handleDownloadAd);
+            generateCampaignBtn.addEventListener('click', handleGenerateCampaign);
+            launchToMetaBtn.addEventListener('click', openMetaConnectModal);
+            connectAndLaunchBtn.addEventListener('click', () => {
+                const metaId = DOMElements.metaAdAccountIdInput.value.trim();
+                if (!metaId) return showMessageBox('Please enter a valid Meta Ad Account ID.', true);
+                handleLaunchToMeta(metaId);
+            });
+
+            const tabs = { ad: [DOMElements.adGenerator, showAdGeneratorBtn], campaign: [DOMElements.campaignMaker, showCampaignMakerBtn], dashboard: [DOMElements.myAdsDashboardSection, showDashboardBtn] };
+            function switchTab(activeTab) {
+                Object.values(tabs).forEach(([section, button]) => {
+                    section.classList.add('hidden');
+                    button.classList.replace('bg-indigo-600', 'bg-gray-800');
+                });
+                const [activeSection, activeButton] = tabs[activeTab];
+                activeSection.classList.remove('hidden');
+                activeButton.classList.replace('bg-gray-800', 'bg-indigo-600');
+            }
+            showAdGeneratorBtn.addEventListener('click', () => switchTab('ad'));
+            showCampaignMakerBtn.addEventListener('click', () => switchTab('campaign'));
+            showDashboardBtn.addEventListener('click', () => switchTab('dashboard'));
+
+            addNewAdCard.addEventListener('click', () => switchTab('ad'));
+            addNewAdBtn.addEventListener('click', () => switchTab('ad'));
+
+            signupForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const email = DOMElements.signupEmail.value;
+                if(email) {
+                    isTrial = false;
+                    closeSignupModal();
+                    showMessageBox(`Welcome! Your account for ${email} is active. You can now download and launch ads.`);
+                    DOMElements.downloadBtn.classList.remove('cursor-not-allowed', 'opacity-50');
+                    document.querySelectorAll('.download-visual-btn').forEach(btn => btn.classList.remove('cursor-not-allowed', 'opacity-50'));
+                } else {
+                    showMessageBox('Please enter a valid email.', true);
+                }
+            });
+
+            copyAdBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(DOMElements.adCopyText.textContent);
+                showMessageBox('Ad copy copied to clipboard!');
+            });
+            
+            campaignOutput.addEventListener('click', (event) => {
+                if (event.target.closest('.download-visual-btn')) handleDownloadVisual(event);
+                if (event.target.closest('.use-in-ad-gen-btn')) handleUseInAdGenerator(event);
+            });
+        }
+        
+        async function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                DOMElements.uploadLabel.textContent = `Uploaded: ${file.name}`;
+                DOMElements.uploadLabel.classList.add('bg-green-700');
+                productImageBase64 = await fileToBase64(file);
+            }
+        }
+        
+        async function handleCampaignImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                DOMElements.campaignUploadLabel.textContent = `Uploaded: ${file.name}`;
+                DOMElements.campaignUploadLabel.classList.add('bg-green-700');
+                campaignImageBase64 = await fileToBase64(file);
+            }
+        }
+        
+        function handleDownloadAd() {
+            if (isTrial) {
+                if (trialDownloads >= TRIAL_DOWNLOAD_LIMIT) {
+                    showMessageBox('You have reached your free trial download limit.', true);
+                    openSignupModal();
+                    return;
+                }
+                trialDownloads++;
+                showMessageBox(`Download successful! You have ${TRIAL_DOWNLOAD_LIMIT - trialDownloads} free downloads remaining.`);
+            }
+            if (!finalAdImageBase64) return showMessageBox('Please generate an ad first.', true);
+            downloadBase64Image(`data:image/png;base64,${finalAdImageBase64}`, 'soul-tribe-ad.png');
+        }
+
+        function handleDownloadVisual(event) {
+            if (isTrial) {
+                 if (trialDownloads >= TRIAL_DOWNLOAD_LIMIT) {
+                    showMessageBox('You have reached your free trial download limit.', true);
+                    openSignupModal();
+                    return;
+                }
+                trialDownloads++;
+                showMessageBox(`Download successful! You have ${TRIAL_DOWNLOAD_LIMIT - trialDownloads} free downloads remaining.`);
+            }
+            const card = event.target.closest('.p-6');
+            const platformName = card.querySelector('h3').textContent;
+            const imgElement = card.querySelector('img');
+            if (imgElement && imgElement.src.startsWith('data:')) {
+                downloadBase64Image(imgElement.src, `${platformName}-visual.png`);
+            } else {
+                showMessageBox('Image is not available for download.', true);
+            }
+        }
+
+        function handleLaunchToMeta(metaId) {
+            const { connectAndLaunchBtn, adsDashboardGrid, adCopyText, showDashboardBtn } = DOMElements;
+            connectAndLaunchBtn.disabled = true;
+            connectAndLaunchBtn.innerHTML = 'Launching...';
+            
+            // This is a simulation
+            setTimeout(() => {
+                closeMetaConnectModal();
+                showMessageBox(`Campaign launched successfully to Meta account ${metaId}!`);
+                const newAdCard = document.createElement('div');
+                newAdCard.className = 'bg-gray-800 rounded-2xl border border-gray-700 overflow-hidden';
+                let headline = adCopyText.textContent.split("Headline:")[1]?.split("Body:")[0]?.trim() || "Newly Launched Ad";
+                newAdCard.innerHTML = `<img src="data:image/png;base64,${finalAdImageBase64}" alt="Ad Preview" class="w-full h-64 object-cover"><div class="p-6"><h3 class="font-semibold text-white mb-2">"${headline}"</h3><p class="text-sm text-gray-400 mb-4">Status: <span class="font-semibold text-yellow-400">In Review</span></p><div class="grid grid-cols-3 gap-4 text-center"><div><p class="text-xs text-gray-400">Reach</p><p class="text-lg font-bold text-white">0</p></div><div><p class="text-xs text-gray-400">Clicks</p><p class="text-lg font-bold text-white">0</p></div><div><p class="text-xs text-gray-400">CTR</p><p class="text-lg font-bold text-white">0%</p></div></div><button class="mt-4 w-full bg-gray-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors">View Performance</button></div>`;
+                adsDashboardGrid.insertBefore(newAdCard, DOMElements.addNewAdCard);
+                connectAndLaunchBtn.disabled = false;
+                connectAndLaunchBtn.innerHTML = 'Connect & Launch';
+                showDashboardBtn.click();
+            }, 2000);
+        }
+        
+        function handleReset() {
+            const { backgroundPromptInput, uploadLabel, productImageUpload, adImage, adCopyContainer, canvasControls, launchToMetaContainer, overlay, overlayText } = DOMElements;
+            backgroundPromptInput.value = '';
+            
+            // Create a new file input to truly reset it
+            const newUploadInput = productImageUpload.cloneNode(true);
+            productImageUpload.parentNode.replaceChild(newUploadInput, productImageUpload);
+            DOMElements.productImageUpload = newUploadInput; // Update reference
+            newUploadInput.addEventListener('change', handleImageUpload);
+
+            uploadLabel.textContent = 'Upload Product Image';
+            uploadLabel.classList.remove('bg-green-700');
+            
+            productImageBase64 = null;
+            finalAdImageBase64 = null;
+            adImage.src = '';
+            adCopyContainer.classList.add('hidden');
+            canvasControls.classList.add('hidden');
+            launchToMetaContainer.classList.add('hidden');
+            overlay.classList.remove('hidden');
+            overlayText.textContent = 'Enter a prompt and upload an image.';
+            showMessageBox('Generator has been reset.');
+        }
+
+        function handleUseInAdGenerator(event) {
+            const { platform, concept } = event.target.closest('button').dataset;
+            const imgElement = document.getElementById(`img-${platform}`);
+            if (imgElement && imgElement.src) {
+                DOMElements.showAdGeneratorBtn.click();
+                DOMElements.backgroundPromptInput.value = concept;
+                productImageBase64 = imgElement.src.split(',')[1];
+                DOMElements.adImage.src = imgElement.src;
+                DOMElements.uploadLabel.textContent = `Using image from ${platform} campaign`;
+                DOMElements.uploadLabel.classList.add('bg-green-700');
+                DOMElements.overlay.classList.add('hidden');
+                showMessageBox(`Loaded visual concept from ${platform} into Ad Generator.`);
+                DOMElements.adGenerator.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                showMessageBox('Could not find the image to use.', true);
+            }
+        }
+        
+        function setupPayPalButtons() {
+            const plans = {
+                starter: { container: '#paypal-starter-button-container', value: '19.00' },
+                pro: { container: '#paypal-pro-button-container', value: '49.00' },
+                business: { container: '#paypal-business-button-container', value: '99.00' }
+            };
+
+            // Check if the PayPal SDK is loaded before trying to render buttons
+            if (typeof paypal !== 'undefined') {
+                for (const plan in plans) {
+                    try {
+                        paypal.Buttons({
+                            createOrder: function(data, actions) {
+                                return actions.order.create({ purchase_units: [{ amount: { value: plans[plan].value } }] });
+                            },
+                            onApprove: function(data, actions) {
+                                return actions.order.capture().then(function(details) {
+                                    isTrial = false;
+                                    showMessageBox('Payment successful! Welcome, ' + details.payer.name.given_name);
+                                    document.querySelector(plans[plan].container).innerHTML = `<div class="text-center text-green-400 font-bold p-3 bg-green-900/50 rounded-lg">Current Plan</div>`;
+                                    Object.values(plans).forEach(p => { if(p.container !== plans[plan].container) document.querySelector(p.container).innerHTML = ''; });
+                                });
+                            },
+                            onError: function(err) {
+                                console.error('PayPal Error:', err);
+                                showMessageBox('An error occurred with your payment.', true);
+                            }
+                        }).render(plans[plan].container);
+                    } catch(e) {
+                        console.error("PayPal button rendering error:", e);
+                        document.querySelector(plans[plan].container).innerHTML = `<div class="text-center text-red-400 text-sm">Could not load payment options. Please check your PayPal Client ID.</div>`;
+                    }
+                }
+            } else {
+                console.warn('PayPal SDK not yet loaded. Retrying in 1 second...');
+                setTimeout(setupPayPalButtons, 1000);
+            }
+        }
+        
+        window.addEventListener('load', () => {
+            $(document).ready(function() { $('#platforms').select2(); });
+            initializeScroller();
+            setupEventListeners();
+            setupPayPalButtons();
+        });
+    </script>
 </body>
 </html>
 
