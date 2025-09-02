@@ -1,9 +1,8 @@
-// Vercel Serverless Function to handle API calls - LIVE MODE
+// Vercel Serverless Function to handle API calls - LIVE MODE (Corrected)
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // --- CONFIGURATION ---
-// IMPORTANT: You MUST set your GEMINI_API_KEY in your Vercel project's Environment Variables.
 const API_KEY = process.env.GEMINI_API_KEY;
 
 if (!API_KEY) {
@@ -15,16 +14,14 @@ const genAI = new GoogleGenerativeAI(API_KEY);
 // Define the models to be used for different tasks
 const textModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash-preview-0520" });
 const visionModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash-preview-0520" });
-const imageModel = genAI.getGenerativeModel({ model: "imagen-3.0-generate-preview-0611"});
-
+// Using the specific model for image generation
+const imageModel = genAI.getGenerativeModel({ model: "imagen-3.0-generate-preview-0611" });
 
 // --- MAIN HANDLER ---
-// This is the main function Vercel will run.
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
-
     if (!API_KEY) {
         return res.status(500).json({ error: 'Server configuration error: API key not found.' });
     }
@@ -37,26 +34,29 @@ export default async function handler(req, res) {
 
         switch (type) {
             case 'productAnalysis':
-            case 'adImageComposite': // Handled by the same vision model
+            case 'adImageComposite':
                 result = await visionModel.generateContent(payload.contents);
                 break;
 
             case 'adCopy':
-            case 'campaignText': // Handled by the same text model
+            case 'campaignText':
                 result = await textModel.generateContent(payload.contents, payload.generationConfig);
                 break;
             
             case 'campaignVisual':
-                // Note: The Imagen model uses a different method signature
                 const imageResponse = await imageModel.generateContent(payload.prompt);
-                // We need to structure the response to be consistent for the frontend.
-                // This is a mock structure to match what the other models return.
-                // The actual image data is typically handled differently (e.g., streaming or direct bytes),
-                // but for this client-side setup, we'll assume a parsable format is intended.
-                // This part might need adjustment based on the exact client-side expectation
-                // For now, we'll simulate a similar response structure.
-                // A real implementation would process imageResponse differently.
-                 result = { predictions: [ { bytesBase64Encoded: imageResponse.response.candidates[0].content.parts[0].inlineData.data }] };
+                
+                // --- THIS IS THE CORRECTED CODE ---
+                // Find the part of the response that contains the image data.
+                const imagePart = imageResponse.response.candidates[0].content.parts.find(part => part.inlineData);
+
+                if (!imagePart || !imagePart.inlineData || !imagePart.inlineData.data) {
+                    throw new Error("No image data found in the API response.");
+                }
+                const imageData = imagePart.inlineData.data;
+
+                // Structure the response consistently for the frontend.
+                result = { predictions: [{ bytesBase64Encoded: imageData }] };
                 break;
 
             default:
@@ -68,7 +68,6 @@ export default async function handler(req, res) {
 
     } catch (error) {
         console.error(`Error processing API request:`, error);
-        // Provide a more detailed error message back to the client if possible
         const errorMessage = error.response ? JSON.stringify(error.response.data) : error.message;
         return res.status(500).json({ 
             error: `An error occurred while processing your request.`,
@@ -76,5 +75,6 @@ export default async function handler(req, res) {
         });
     }
 }
+
 
 
