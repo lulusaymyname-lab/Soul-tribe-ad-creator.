@@ -1,6 +1,5 @@
 // Vercel Serverless Function to handle API calls to Google's Gemini API
-
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // --- CONFIGURATION ---
 // IMPORTANT: You must set your GEMINI_API_KEY in your Vercel project's Environment Variables.
@@ -14,23 +13,6 @@ const genAI = new GoogleGenerativeAI(API_KEY);
 const textModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash-preview-05-20" });
 const visionModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash-preview-05-20" });
 const imageGenModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash-image-preview" });
-
-// Helper to handle API calls and retry logic
-async function makeApiCall(model, methodName, ...args) {
-    try {
-        const result = await model[methodName](...args);
-        // For gemini-pro-vision, the structure is slightly different
-        if (result.response) {
-            return result.response.candidates;
-        }
-        // For gemini-pro (text) and gemini-2.5-flash-image-preview
-        return result.candidates;
-    } catch (error) {
-        console.error(`Error calling Gemini API with ${model.model} on method ${methodName}:`, error);
-        throw new Error(`Gemini API Error: ${error.message}`);
-    }
-}
-
 
 // --- MAIN HANDLER ---
 // This is the main function Vercel will run.
@@ -61,22 +43,20 @@ export default async function handler(request, response) {
             return response.status(400).json({ error: 'Missing "type" or "payload" in request body' });
         }
 
-        let resultCandidates;
+        let result;
 
         // Route the request based on the 'type'
         switch (type) {
             case 'productAnalysis':
             case 'adImageComposite': {
                 const { contents, generationConfig } = payload;
-                const result = await imageGenModel.generateContent({ contents, generationConfig });
-                resultCandidates = result.response.candidates;
+                result = await imageGenModel.generateContent({ contents, generationConfig });
                 break;
             }
             case 'adCopy':
             case 'campaignText': {
                  const { contents, generationConfig } = payload;
-                 const result = await textModel.generateContent({ contents, generationConfig });
-                 resultCandidates = result.response.candidates;
+                 result = await textModel.generateContent({ contents, generationConfig });
                  break;
             }
             case 'campaignVisual': {
@@ -84,17 +64,19 @@ export default async function handler(request, response) {
                  // We will simulate it using gemini-2.5-flash-image-preview for consistency here.
                  const { instances } = payload;
                  const prompt = instances[0].prompt;
-                 const result = await imageGenModel.generateContent(prompt);
-                 const base64Data = result.response.candidates[0].content.parts.find(p => p.inlineData)?.inlineData?.data;
+                 const imageResult = await imageGenModel.generateContent(prompt);
+                 const base64Data = imageResult.response.candidates[0].content.parts.find(p => p.inlineData)?.inlineData?.data;
                  // Imagen expects a specific response structure, so we mimic it.
                  return response.status(200).json({ predictions: [{ bytesBase64Encoded: base64Data }] });
             }
             default:
                 return response.status(400).json({ error: `Unknown request type: "${type}"` });
         }
+        
+        const resultCandidates = result?.response?.candidates;
 
         if (!resultCandidates || resultCandidates.length === 0) {
-            console.error('API returned no candidates for type:', type);
+            console.error('API returned no candidates for type:', type, 'Full response:', result);
             return response.status(500).json({ error: 'The AI model did not return a valid response.' });
         }
         
@@ -106,3 +88,5 @@ export default async function handler(request, response) {
         return response.status(500).json({ error: error.message || 'An internal server error occurred.' });
     }
 }
+
+
