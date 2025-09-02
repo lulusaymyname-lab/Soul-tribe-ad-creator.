@@ -10,10 +10,11 @@ if (!API_KEY) {
 
 const genAI = new GoogleGenerativeAI(API_KEY);
 
-const textModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash-preview-0520" });
-const visionModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash-preview-0520" });
-// The model for generating images from a text prompt.
-const imageModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash-image-preview" });
+// **FIX: Using the 'latest' stable model names to prevent "Not Found" errors.**
+const textModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+const visionModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+const imageModel = genAI.getGenerativeModel({ model: "imagen-3.0-generate-002" }); // Using the recommended Imagen 3 model
+
 
 // --- MAIN HANDLER ---
 export default async function handler(req, res) {
@@ -36,22 +37,19 @@ export default async function handler(req, res) {
             case 'productAnalysis':
             case 'adCopy':
             case 'campaignText':
-                result = await textModel.generateContent(payload);
-                response = result.response;
-                return res.status(200).json({ candidates: response.candidates });
-
             case 'adImageComposite':
-                result = await visionModel.generateContent(payload);
-                response = result.response;
-                return res.status(200).json({ candidates: response.candidates });
+                 result = await textModel.generateContent(payload);
+                 response = result.response;
+                 return res.status(200).json({ candidates: response.candidates });
             
             case 'campaignVisual':
-                // For simple text-to-image, the payload is different.
-                // We use the 'gemini-1.5-flash-image-preview' model for this.
-                result = await imageModel.generateContent(payload.prompt);
-                response = result.response;
+                // For simple text-to-image, the payload is different and requires a different model.
+                // The prompt is expected directly in the payload.
+                const imageResult = await imageModel.generateContent(payload.prompt);
+                const imageResponse = imageResult.response;
+                
                 // We need to format the response to match what the frontend expects (a `predictions` array)
-                const imageBase64 = response.candidates[0].content.parts.find(p => p.inlineData)?.inlineData?.data;
+                const imageBase64 = imageResponse.candidates[0].content.parts.find(p => p.inlineData)?.inlineData?.data;
                 return res.status(200).json({ predictions: [{ bytesBase64Encoded: imageBase64 }] });
 
             default:
@@ -60,6 +58,7 @@ export default async function handler(req, res) {
 
     } catch (error) {
         console.error(`Error in ${type} API call:`, error);
+        // Try to provide a more specific error message from the Google API if available
         const details = error.response?.data?.error?.message || error.message;
         return res.status(500).json({ error: 'An error occurred during the API call.', details });
     }
