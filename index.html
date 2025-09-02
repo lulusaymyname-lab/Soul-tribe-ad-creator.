@@ -181,7 +181,8 @@
 
                 overlayText.textContent = 'Generating ad copy...';
                 const adCopyPrompt = `Create a short, punchy ad for a ${productDescription.toLowerCase()} with this scene: "${prompt}". Format as: Headline: [Your Headline] Body: [Your Body Text]`;
-                const adCopyResult = await callSecureApi('adCopy', { contents: [{ role: "user", parts: [{ text: adCopyPrompt }] }] });
+                // ** FIX: Removed the 'role' property from the payload **
+                const adCopyResult = await callSecureApi('adCopy', { contents: [{ parts: [{ text: adCopyPrompt }] }] });
                 const adCopy = adCopyResult?.candidates?.[0]?.content?.parts?.[0]?.text || "Failed to generate ad copy.";
                 adCopyText.textContent = adCopy;
 
@@ -223,7 +224,8 @@
 
             try {
                 const basePrompt = `Create a social media campaign for: ${platforms.join(', ')}. Product: "${productName}". For each platform, provide "headline", "ad_copy", "visual_concept", "call_to_action". Emphasize scientific and botanical benefits. Format as a single JSON array of objects.`;
-                const campaignTextPayload = { contents: [{ role: "user", parts: [{ text: basePrompt }] }], generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "OBJECT", properties: { "platform_name": { "type": "STRING" }, "headline": { "type": "STRING" }, "ad_copy": { "type": "STRING" }, "visual_concept": { "type": "STRING" }, "call_to_action": { "type": "STRING" } }, required: ["platform_name", "headline", "ad_copy", "visual_concept", "call_to_action"] } } } };
+                // ** FIX: Removed the 'role' property from the payload **
+                const campaignTextPayload = { contents: [{ parts: [{ text: basePrompt }] }], generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "OBJECT", properties: { "platform_name": { "type": "STRING" }, "headline": { "type": "STRING" }, "ad_copy": { "type": "STRING" }, "visual_concept": { "type": "STRING" }, "call_to_action": { "type": "STRING" } }, required: ["platform_name", "headline", "ad_copy", "visual_concept", "call_to_action"] } } } };
                 
                 const textResult = await callSecureApi('campaignText', campaignTextPayload);
                 const campaignData = JSON.parse(textResult?.candidates?.[0]?.content?.parts?.[0]?.text);
@@ -301,7 +303,7 @@
             
             const newUploadInput = productImageUpload.cloneNode(true);
             productImageUpload.parentNode.replaceChild(newUploadInput, productImageUpload);
-            DOMElements.productImageUpload = newUploadInput;
+            DOMElements.productImageUpload = newUploadİnput;
             newUploadInput.addEventListener('change', handleImageUpload);
 
             uploadLabel.textContent = 'Upload Product Image';
@@ -415,4 +417,5 @@
     </script>
 </body>
 </html>
+
 
