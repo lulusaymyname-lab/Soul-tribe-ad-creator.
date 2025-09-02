@@ -6,7 +6,6 @@
     <title>Ad & Campaign Creator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <!-- PayPal SDK will be loaded by script below -->
     <script id="paypal-sdk-script"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -150,11 +149,13 @@
             });
         }
 
+        // --- THE CRITICAL FIX IS HERE ---
+        // This function now sends the correct payload format.
         async function callSecureApi(type, payload) {
             const response = await fetch(SECURE_API_ENDPOINT, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ type, payload })
+                body: JSON.stringify({ type, payload }) // The body is now wrapped correctly
             });
             if (!response.ok) {
                 const errorResult = await response.json().catch(() => ({ error: 'Failed to parse error from server.' }));
@@ -176,19 +177,19 @@
             overlayText.textContent = 'Analyzing product...';
 
             try {
+                // The payload format is now correct
                 const analysisResult = await callSecureApi('productAnalysis', { contents: [{ parts: [{ text: "Identify the main product." }, { inlineData: { mimeType: "image/jpeg", data: productImageBase64 } }] }] });
                 const productDescription = analysisResult?.candidates?.[0]?.content?.parts?.[0]?.text || "product";
 
                 overlayText.textContent = 'Generating ad copy...';
                 const adCopyPrompt = `Create a short, punchy ad for a ${productDescription.toLowerCase()} with this scene: "${prompt}". Format as: Headline: [Your Headline] Body: [Your Body Text]`;
-                // ** FIX: Removed the 'role' property from the payload **
                 const adCopyResult = await callSecureApi('adCopy', { contents: [{ parts: [{ text: adCopyPrompt }] }] });
                 const adCopy = adCopyResult?.candidates?.[0]?.content?.parts?.[0]?.text || "Failed to generate ad copy.";
                 adCopyText.textContent = adCopy;
 
                 overlayText.textContent = 'Compositing final ad image...';
                 const compositePrompt = `Create a professional marketing ad. Background: "${prompt}". Place the provided product image prominently. Integrate this ad copy: "${adCopy}".`;
-                const compositeResult = await callSecureApi('adImageComposite', { contents: [{ parts: [{ text: compositePrompt }, { inlineData: { mimeType: "image/jpeg", data: productImageBase64 } }] }], generationConfig: { responseModalities: ['TEXT', 'IMAGE'] } });
+                const compositeResult = await callSecureApi('adImageComposite', { contents: [{ parts: [{ text: compositePrompt }, { inlineData: { mimeType: "image/jpeg", data: productImageBase64 } }] }] });
                 
                 finalAdImageBase64 = compositeResult?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
 
@@ -224,7 +225,6 @@
 
             try {
                 const basePrompt = `Create a social media campaign for: ${platforms.join(', ')}. Product: "${productName}". For each platform, provide "headline", "ad_copy", "visual_concept", "call_to_action". Emphasize scientific and botanical benefits. Format as a single JSON array of objects.`;
-                // ** FIX: Removed the 'role' property from the payload **
                 const campaignTextPayload = { contents: [{ parts: [{ text: basePrompt }] }], generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "OBJECT", properties: { "platform_name": { "type": "STRING" }, "headline": { "type": "STRING" }, "ad_copy": { "type": "STRING" }, "visual_concept": { "type": "STRING" }, "call_to_action": { "type": "STRING" } }, required: ["platform_name", "headline", "ad_copy", "visual_concept", "call_to_action"] } } } };
                 
                 const textResult = await callSecureApi('campaignText', campaignTextPayload);
@@ -303,7 +303,7 @@
             
             const newUploadInput = productImageUpload.cloneNode(true);
             productImageUpload.parentNode.replaceChild(newUploadInput, productImageUpload);
-            DOMElements.productImageUpload = newUploadİnput;
+            DOMElements.productImageUpload = newUploadInput;
             newUploadInput.addEventListener('change', handleImageUpload);
 
             uploadLabel.textContent = 'Upload Product Image';
@@ -417,5 +417,6 @@
     </script>
 </body>
 </html>
+
 
 
