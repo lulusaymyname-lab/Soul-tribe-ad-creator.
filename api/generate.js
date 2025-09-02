@@ -11,7 +11,6 @@ if (!API_KEY) {
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 const textModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
-const visionModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 // Note: Imagen is called differently, so we don't initialize it here.
 
 // --- MAIN HANDLER ---
@@ -34,12 +33,12 @@ export default async function handler(req, res) {
             case 'adCopy':
             case 'campaignText':
             case 'adImageComposite':
+                // These all use the same Gemini model and request structure
                 result = await textModel.generateContent(payload);
                 response = result.response;
                 return res.status(200).json({ candidates: response.candidates });
 
             case 'campaignVisual':
-                // **THE CRITICAL FIX IS HERE**
                 // Imagen uses a different endpoint and payload structure via a direct fetch call.
                 const imagenApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${API_KEY}`;
                 
@@ -72,7 +71,6 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: 'An error occurred during the API call.', details: error.message });
     }
 }
-
 
 
 
