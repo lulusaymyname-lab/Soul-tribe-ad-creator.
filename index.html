@@ -49,7 +49,6 @@
             </p>
             <div class="scroller" data-speed="slow">
                 <div class="scroller__inner">
-                    <!-- Images will be dynamically added here -->
                 </div>
             </div>
         </section>
@@ -353,12 +352,16 @@
 
             function switchTab(activeTab) {
                 Object.values(tabs).forEach(([section, button]) => {
-                    section.classList.add('hidden');
-                    button.classList.replace('bg-indigo-600', 'bg-gray-800');
+                    if(section && button) {
+                        section.classList.add('hidden');
+                        button.classList.replace('bg-indigo-600', 'bg-gray-800');
+                    }
                 });
                 const [activeSection, activeButton] = tabs[activeTab];
-                activeSection.classList.remove('hidden');
-                activeButton.classList.replace('bg-gray-800', 'bg-indigo-600');
+                if(activeSection && activeButton) {
+                    activeSection.classList.remove('hidden');
+                    activeButton.classList.replace('bg-gray-800', 'bg-indigo-600');
+                }
             }
 
             DOMElements.showAdGeneratorBtn.addEventListener('click', () => switchTab('ad'));
@@ -368,7 +371,35 @@
         }
         
         function setupPayPalButtons() {
-            // PayPal setup logic here if needed
+            if (typeof paypal === 'undefined') return;
+            const plans = {
+                starter: { container: '#paypal-starter-button-container', value: '19.00' },
+                pro: { container: '#paypal-pro-button-container', value: '49.00' },
+                business: { container: '#paypal-business-button-container', value: '99.00' }
+            };
+
+            for (const plan in plans) {
+                try {
+                    paypal.Buttons({
+                        createOrder: function(data, actions) {
+                            return actions.order.create({ purchase_units: [{ amount: { value: plans[plan].value } }] });
+                        },
+                        onApprove: function(data, actions) {
+                            return actions.order.capture().then(function(details) {
+                                showMessageBox('Payment successful! Welcome, ' + details.payer.name.given_name);
+                            });
+                        },
+                        onError: function(err) {
+                            console.error('PayPal Error:', err);
+                            showMessageBox('An error occurred with your payment.', true);
+                        }
+                    }).render(plans[plan].container);
+                } catch(e) {
+                    console.error("PayPal button rendering error:", e);
+                    const container = document.querySelector(plans[plan].container);
+                    if(container) container.innerHTML = `<div class="text-center text-red-400 text-sm">Could not load payment options.</div>`;
+                }
+            }
         }
 
         window.addEventListener('load', () => {
@@ -378,15 +409,10 @@
             if (window.self === window.top) {
                 const paypalScript = document.getElementById('paypal-sdk-script');
                 paypalScript.src = "https://www.paypal.com/sdk/js?client-id=AQRSVj2hhAqWy7TCjAWRB4mxj5Y3B87JdMGtBUIGCEKMFMWLvep2pRGDGyjTebgI2N760RB1jUrsmZGW&currency=USD";
-                paypalScript.onload = () => {
-                    setupPayPalButtons();
-                };
+                paypalScript.onload = setupPayPalButtons;
             }
         });
     </script>
 </body>
 </html>
-
-
-
 
