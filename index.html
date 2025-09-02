@@ -117,7 +117,7 @@
 
         db.auth.onAuthStateChange((_event, session) => {
             if(session?.user){
-                 if (!currentUser) { // Only initialize if it's a new login
+                 if (!currentUser) { 
                     currentUser = session.user;
                     initializeApp();
                  }
@@ -275,7 +275,7 @@
                 }]);
                 
                 DOMElements.adCopyContainer.classList.remove('hidden');
-                fetchUserAds(); // Refresh the dashboard
+                fetchUserAds(); 
 
             } catch (error) {
                 showMessageBox(error.message, true);
@@ -339,6 +339,7 @@
     </script>
 </body>
 </html>
+
 
 
 
