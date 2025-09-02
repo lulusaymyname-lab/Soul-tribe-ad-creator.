@@ -1,0 +1,13 @@
+{
+  "name": "soul-tribe-ad-creator-backend",
+  "version": "1.0.0",
+  "description": "Backend serverless function for the ad creator application.",
+  "main": "api/generate.js",
+  "type": "module",
+  "scripts": {
+    "start": "node api/generate.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.7.1"
+  }
+}
