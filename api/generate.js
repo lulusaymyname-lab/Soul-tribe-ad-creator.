@@ -14,7 +14,6 @@ const genAI = new GoogleGenerativeAI(API_KEY);
 // Define the models to be used for different tasks
 const textModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash-preview-0520" });
 const visionModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash-preview-0520" });
-// Using the specific model for image generation
 const imageModel = genAI.getGenerativeModel({ model: "imagen-3.0-generate-preview-0611" });
 
 // --- MAIN HANDLER ---
@@ -45,17 +44,12 @@ export default async function handler(req, res) {
             
             case 'campaignVisual':
                 const imageResponse = await imageModel.generateContent(payload.prompt);
-                
-                // --- THIS IS THE CORRECTED CODE ---
-                // Find the part of the response that contains the image data.
                 const imagePart = imageResponse.response.candidates[0].content.parts.find(part => part.inlineData);
 
                 if (!imagePart || !imagePart.inlineData || !imagePart.inlineData.data) {
                     throw new Error("No image data found in the API response.");
                 }
                 const imageData = imagePart.inlineData.data;
-
-                // Structure the response consistently for the frontend.
                 result = { predictions: [{ bytesBase64Encoded: imageData }] };
                 break;
 
@@ -75,6 +69,5 @@ export default async function handler(req, res) {
         });
     }
 }
-
 
 
