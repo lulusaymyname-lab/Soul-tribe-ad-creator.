@@ -6,8 +6,6 @@
     <title>Ad & Campaign Creator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <!-- PayPal SDK -->
-    <script src="https://www.paypal.com/sdk/js?client-id=AQRSVj2hhAqWy7TCjAWRB4mxj5Y3B87JdMGtBUIGCEKMFMWLvep2pRGDGyjTebgI2N760RB1jUrsmZGW&currency=USD"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         body {
@@ -259,11 +257,9 @@
         }
 
         async function callSecureApi(type, payload) {
-            if (window.self !== window.top) {
-                throw new Error("API calls are disabled in this preview environment.");
-            }
-            const response = await fetch(SECURE_API_ENDPOINT, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
+            const response = await fetch('/api/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ type, payload })
             });
             if (!response.ok) {
@@ -312,19 +308,19 @@
                 { src: "https://i.imgur.com/RCRgEIj.png", title: "AI Ad Example 3" }, { src: "https://i.imgur.com/NXeFCWd.png", title: "AI Ad Example 4" },
             ];
             scrollers.forEach(scroller => {
-              const scrollerInner = scroller.querySelector(".scroller__inner");
-              if (!scrollerInner) return;
-              const fragment = document.createDocumentFragment();
-              [...carouselData, ...carouselData].forEach(item => {
-                const img = document.createElement('img');
-                img.src = item.src; img.alt = item.title;
-                img.onerror = () => { img.src = `https://placehold.co/180x180/374151/9CA3AF?text=Error`; };
-                fragment.appendChild(img);
-              });
-              scrollerInner.appendChild(fragment);
-              if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-                  scroller.setAttribute("data-animated", true);
-              }
+                const scrollerInner = scroller.querySelector(".scroller__inner");
+                if (!scrollerInner) return;
+                const fragment = document.createDocumentFragment();
+                [...carouselData, ...carouselData].forEach(item => {
+                    const img = document.createElement('img');
+                    img.src = item.src; img.alt = item.title;
+                    img.onerror = () => { img.src = `https://placehold.co/180x180/374151/9CA3AF?text=Error`; };
+                    fragment.appendChild(img);
+                });
+                scrollerInner.appendChild(fragment);
+                if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+                    scroller.setAttribute("data-animated", true);
+                }
             });
         }
 
@@ -623,40 +619,56 @@
         }
         
         function setupPayPalButtons() {
-            if (window.self !== window.top) {
-                console.warn("PayPal buttons are disabled in this preview environment to prevent errors.");
-                return;
-            }
-            
-            const plans = {
-                starter: { container: '#paypal-starter-button-container', value: '19.00' },
-                pro: { container: '#paypal-pro-button-container', value: '49.00' },
-                business: { container: '#paypal-business-button-container', value: '99.00' }
-            };
+            // Conditionally load and set up PayPal to avoid errors in preview environments
+            if (window.self === window.top) {
+                const script = document.createElement('script');
+                script.src = "https://www.paypal.com/sdk/js?client-id=AQRSVj2hhAqWy7TCjAWRB4mxj5Y3B87JdMGtBUIGCEKMFMWLvep2pRGDGyjTebgI2N760RB1jUrsmZGW&currency=USD";
+                script.onload = () => {
+                    const plans = {
+                        starter: { container: '#paypal-starter-button-container', value: '19.00' },
+                        pro: { container: '#paypal-pro-button-container', value: '49.00' },
+                        business: { container: '#paypal-business-button-container', value: '99.00' }
+                    };
 
-            for (const plan in plans) {
-                try {
-                    paypal.Buttons({
-                        createOrder: function(data, actions) {
-                            return actions.order.create({ purchase_units: [{ amount: { value: plans[plan].value } }] });
-                        },
-                        onApprove: function(data, actions) {
-                            return actions.order.capture().then(function(details) {
-                                isTrial = false;
-                                showMessageBox('Payment successful! Welcome, ' + details.payer.name.given_name);
-                                document.querySelector(plans[plan].container).innerHTML = `<div class="text-center text-green-400 font-bold p-3 bg-green-900/50 rounded-lg">Current Plan</div>`;
-                                Object.values(plans).forEach(p => { if(p.container !== plans[plan].container) document.querySelector(p.container).innerHTML = ''; });
-                            });
-                        },
-                        onError: function(err) {
-                            console.error('PayPal Error:', err);
-                            showMessageBox('An error occurred with your payment.', true);
+                    for (const plan in plans) {
+                        try {
+                            if(document.querySelector(plans[plan].container)) {
+                                paypal.Buttons({
+                                    createOrder: function(data, actions) {
+                                        return actions.order.create({ purchase_units: [{ amount: { value: plans[plan].value } }] });
+                                    },
+                                    onApprove: function(data, actions) {
+                                        return actions.order.capture().then(function(details) {
+                                            isTrial = false;
+                                            showMessageBox('Payment successful! Welcome, ' + details.payer.name.given_name);
+                                            document.querySelector(plans[plan].container).innerHTML = `<div class="text-center text-green-400 font-bold p-3 bg-green-900/50 rounded-lg">Current Plan</div>`;
+                                            Object.values(plans).forEach(p => { if(p.container !== plans[plan].container) document.querySelector(p.container).innerHTML = ''; });
+                                        });
+                                    },
+                                    onError: function(err) {
+                                        console.error('PayPal Error:', err);
+                                        showMessageBox('An error occurred with your payment.', true);
+                                    }
+                                }).render(plans[plan].container);
+                            }
+                        } catch(e) {
+                            console.error("PayPal button rendering error:", e);
+                            if(document.querySelector(plans[plan].container)){
+                                document.querySelector(plans[plan].container).innerHTML = `<div class="text-center text-red-400 text-sm">Could not load payment options.</div>`;
+                            }
                         }
-                    }).render(plans[plan].container);
-                } catch(e) {
-                    console.error("PayPal button rendering error:", e);
-                    document.querySelector(plans[plan].container).innerHTML = `<div class="text-center text-red-400 text-sm">Could not load payment options. Please check your PayPal Client ID.</div>`;
-                }
+                    }
+                };
+                script.onerror = () => {
+                     console.error("Failed to load the PayPal SDK script.");
+                     const pricingSection = document.getElementById('pricing');
+                     if(pricingSection) {
+                        pricingSection.innerHTML = '<p class="text-center text-red-400">Could not load payment options. Please try again later.</p>';
+                    }
+                };
+                document.body.appendChild(script);
+            } else {
+                 console.warn("PayPal buttons are disabled in this preview environment.");
             }
         }
         
@@ -669,5 +681,6 @@
     </script>
 </body>
 </html>
+
 
 
