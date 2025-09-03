@@ -42,8 +42,19 @@
 
             <div id="adGenerator" class="flex flex-col lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6">
                  <div class="flex-1 flex flex-col space-y-6">
-                    <div class="p-6 bg-gray-800 rounded-2xl border border-gray-700 shadow-sm"><h2 class="text-2xl font-bold text-white mb-4">Generate Ad</h2><textarea id="backgroundPrompt" class="w-full h-24 p-3 text-base bg-gray-900 text-white border-2 border-gray-600 rounded-xl" placeholder="A sleek marble podium..."></textarea><label id="uploadLabel" class="cursor-pointer mt-4 w-full text-gray-200 font-bold py-3 px-6 rounded-xl shadow-md text-center bg-gray-700 hover:bg-gray-600 block transition-colors">Upload Product Image<input type="file" id="productImageUpload" accept="image/*" class="hidden" /></label><button id="generateAdBtn" class="mt-4 w-full bg-indigo-600 text-white font-bold py-4 px-8 rounded-xl hover:bg-indigo-700 transition-colors">Generate Ad</button></div>
-                    <div id="adCopyContainer" class="p-6 bg-gray-800 rounded-2xl border border-gray-700 hidden"><h3 class="text-xl font-bold mb-2">Generated Ad Copy:</h3><div id="adCopyText" class="text-gray-300"></div></div>
+                    <div class="p-6 bg-gray-800 rounded-2xl border border-gray-700 shadow-sm">
+                        <h2 class="text-2xl font-bold text-white mb-4">Generate Ad</h2>
+                        <textarea id="backgroundPrompt" class="w-full h-24 p-3 text-base bg-gray-900 text-white border-2 border-gray-600 rounded-xl" placeholder="A sleek marble podium..."></textarea>
+                        <label id="uploadLabel" class="cursor-pointer mt-4 w-full text-gray-200 font-bold py-3 px-6 rounded-xl shadow-md text-center bg-gray-700 hover:bg-gray-600 block transition-colors">
+                            Upload Product Image
+                            <input type="file" id="productImageUpload" accept="image/*" class="hidden" />
+                        </label>
+                        <button id="generateAdBtn" class="mt-4 w-full bg-indigo-600 text-white font-bold py-4 px-8 rounded-xl hover:bg-indigo-700 transition-colors">Generate Ad</button>
+                    </div>
+                    <div id="adCopyContainer" class="p-6 bg-gray-800 rounded-2xl border border-gray-700 hidden">
+                        <h3 class="text-xl font-bold mb-2">Generated Ad Copy:</h3>
+                        <div id="adCopyText" class="text-gray-300"></div>
+                    </div>
                 </div>
                 <div class="flex-1 flex flex-col items-center justify-center space-y-4">
                     <div class="relative w-full aspect-[1/1] overflow-hidden rounded-xl shadow-2xl border border-gray-700 bg-gray-900">
@@ -56,7 +67,9 @@
             </div>
 
             <div id="myAdsDashboardSection" class="hidden">
-                <div class="flex flex-wrap justify-between items-center mb-10 gap-4"><h2 class="text-3xl font-bold">My Saved Ads</h2></div>
+                <div class="flex flex-wrap justify-between items-center mb-10 gap-4">
+                    <h2 class="text-3xl font-bold">My Saved Ads</h2>
+                </div>
                 <div id="adsDashboardGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
             </div>
             
@@ -76,21 +89,20 @@
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module">
-        // 🔑 Supabase Configuration
-        // Replace these placeholders with your actual Supabase project values
+        // 🔑 Supabase Configuration (your real keys are here)
+        const SUPABASE_URL = "https://abfbmvrcmciblojurolm.supabase.co";   // ✅ your Project URL
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFiZmJtdnJjbWNpYmxvanVyb2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY4NTA4NTksImV4cCI6MjA3MjQyNjg1OX0.fLBlkFfewA6l9LiJSC82nIIZyusCtVd4ptzHT62Zi_U";   // ✅ your anon key
 
-        const SUPABASE_URL = "https://YOUR_PROJECT_URL.supabase.co";   // 👈 REPLACE THIS WITH YOUR PROJECT URL
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFiZmJtdnJjbWNpYmxvanVyb2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY4NTA4NTksImV4cCI6MjA3MjQyNjg1OX0.fLBlkFfewA6l9LiJSC82nIIZyusCtVd4ptzHT62Zi_U";      // 👈 REPLACE THIS WITH YOUR ANON KEY
-
-        if (SUPABASE_URL.includes("https://abfbmvrcmciblojurolm.supabase.co") || SUPABASE_ANON_KEY.includes("YOUR_SUPABASE_ANON_KEY_HERE")) {
-             document.body.innerHTML = '<div class="text-red-500 text-center p-8">Application Error: Supabase keys have not been set in index.html. Please paste your keys and redeploy.</div>';
-             throw new Error("Supabase keys are not configured.");
+        // ✅ Only show error if placeholders are still there
+        if (SUPABASE_URL.includes("YOUR_PROJECT_URL") || SUPABASE_ANON_KEY.includes("YOUR_SUPABASE_ANON_KEY_HERE")) {
+            document.body.innerHTML = '<div class="text-red-500 text-center p-8">Application Error: Supabase keys have not been set in index.html. Please paste your keys and redeploy.</div>';
+            throw new Error("Supabase keys are not configured.");
         }
 
         const { createClient } = supabase;
         const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        
-        // ... rest of your script stays unchanged ...
+
+        // ... rest of your script (auth, ad generator, PayPal, etc.) goes here ...
     </script>
 </body>
 </html>
