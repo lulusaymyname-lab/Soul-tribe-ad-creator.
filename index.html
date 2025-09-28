@@ -372,27 +372,27 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { 
-            getAuth, 
-            onAuthStateChanged, 
-            createUserWithEmailAndPassword, 
-            signInWithEmailAndPassword, 
-            signOut
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { 
-            getFirestore, 
-            doc, 
-            setDoc, 
-            addDoc, 
-            collection, 
-            query, 
-            where, 
-            getDocs,
-            Timestamp
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+const SUPABASE_URL = "https://const SUPABASE_KEY = 'SUPABASE_CLIENT_API_KEY'";
+const SUPABASE_KEY = "
+const SUPABASE_URL = "https://abfbmvrcmciblojurolm.supabase.co"
+const supabase = createClient(SUPABASE_URL, process.env.SUPABASE_KEY);
+";
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let userSession = null;
+
+async function initApp() {
+  const { data: { session } } = await supabase.auth.getSession();
+  userSession = session?.user || null;
+
+  supabase.auth.onAuthStateChange((_event, session) => {
+    userSession = session?.user || null;
+  });
+}
+initApp();
+
 
         // --- App Configuration ---
         const PAYPAL_CLIENT_ID = "AQRSVj2hhAqWy7TCjAWRB4mxj5Y3B87JdMGtBUIGCEKMFMWLvep2pRGDGyjTebgI2N760RB1jUrsmZGW";
@@ -402,23 +402,10 @@
             business: 'P-4HH16319WF316212NNDDT4SQ'
         };
 
-        // --- Firebase Initialization ---
-        // These are the correct keys for your "soul-tribe-ads" project.
-        const firebaseConfig = {
-            apiKey: "AIzaSyCGWl9TxaJ2MdRr2r-GD7Zm_IohJ7PQTcY",
-            authDomain: "soul-tribe-ads.firebaseapp.com",
-            projectId: "soul-tribe-ads",
-            storageBucket: "soul-tribe-ads.appspot.com",
-            messagingSenderId: "233574408288",
-            appId: "1:233574408288:web:3b6fd78ac700f09cfe305",
-            measurementId: "G-ZJ4EQ1V2QR"
         };
         // ------------------------------------
 
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+     
 
         let userSession = null;
         
@@ -437,15 +424,11 @@
         const authBtn = document.getElementById('authBtn');
         const logoutBtn = document.getElementById('logoutBtn');
         const userEmailSpan = document.getElementById('userEmail');
-        const signupModal = document.getElementById('signupModal');
-        const authModal = document.getElementById('authModal');
-        const signupForm = document.getElementById('signupForm');
-        const signupEmailInput = document.getElementById('signupEmail');
-        const authModalForm = document.getElementById('authModalForm');
-        const authModalTitle = document.getElementById('authModalTitle');
-        const authModalBtn = document.getElementById('authModalBtn');
-        const toggleModalAuth = document.getElementById('toggleModalAuth');
-        const authModalMessage = document.getElementById('authModalMessage');
+       authBtn.addEventListener(...)
+logoutBtn.addEventListener(...)
+signupForm.addEventListener(...)
+authModalForm.addEventListener(...)
+;
         const modalEmailInput = document.getElementById('modalEmail');
         const startTrialBtn = document.getElementById('startTrialBtn');
         const tryNowBtn = document.getElementById('tryNowBtn');
